@@ -1,6 +1,5 @@
 # OwnPath.AI
 
-Built by Aishwarya Singh for Hack Arizona 2026.
 
 Participant support tool for Caridad Community Kitchen's free 10-week culinary training program.
 
@@ -11,20 +10,7 @@ Target prizes: Most Innovative Use of AI for the Public Good + Best Preservation
 
 OwnPath gives participants a friendly, SMS-style nightly check-in (no app download, no login) and gives staff a respectful action queue with AI-powered explanations — never a surveillance wall.
 
-## Tech stack
 
-- React 18 + Vite
-- React Router v6
-- Pre-generated Claude-style explanations and message drafts for a stable demo
-- NWS Weather API (free, no key required) for Tucson forecast
-- Zero backend — runs entirely in the browser
-
-## Setup
-
-```bash
-npm install
-npm run dev
-```
 
 ## Demo routes
 
@@ -44,12 +30,6 @@ npm run dev
 - **What-If Simulator**: Interactive probability calculator for staff
 - **Model card**: Visible in the app — what the model sees, what it never touches
 
-## Security note
-
-This is a static hackathon demo with mock participant data. The staff passcode is only a demo gate, not production authentication. Do not put real participant data or API keys in the browser build; a production version should use backend authentication, server-side AI calls, real consent logging, and encrypted storage.
-
-
----
 
 *"We don't predict people out of the program. We predict where support can keep them in it."*
 
