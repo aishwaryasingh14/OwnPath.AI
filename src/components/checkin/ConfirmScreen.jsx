@@ -4,7 +4,7 @@ import { SUPPORT_RESOURCES, BARRIER_RESOURCE_MAP } from "../../data/resources";
 import { generateParticipantMessage } from "../../lib/anthropicClient";
 import { t, COMMON } from "../../lib/i18n";
 
-export default function ConfirmScreen({ participant, barriers, supportPreference, weather, lang }) {
+export default function ConfirmScreen({ participant, barriers, supportPreference, weather, lang, onAdjust, onTurnOff }) {
   const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [visible, setVisible] = useState(false);
@@ -130,8 +130,8 @@ export default function ConfirmScreen({ participant, barriers, supportPreference
       </div>
 
       <div style={{ display: "flex", gap: "0.6rem", justifyContent: "center" }}>
-        <button className="btn-ghost" style={{ fontSize: "0.78rem" }}>{t(lang, COMMON.adjust)}</button>
-        <button className="btn-ghost" style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>{t(lang, COMMON.turnOff)}</button>
+        <button onClick={onAdjust} className="btn-ghost" style={{ fontSize: "0.78rem" }}>{t(lang, COMMON.adjust)}</button>
+        <button onClick={onTurnOff} className="btn-ghost" style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>{t(lang, COMMON.turnOff)}</button>
       </div>
     </div>
   );

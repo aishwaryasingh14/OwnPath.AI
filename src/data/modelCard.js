@@ -1,7 +1,7 @@
 export const MODEL_CARD = {
   version: "1.0",
   date: "April 2026",
-  team: "OwnPath — Hack Arizona 2026",
+  team: "Aishwarya Singh — OwnPath.AI — Hack Arizona 2026",
   rows: [
     {
       label: "INTENDED USE",
@@ -40,7 +40,7 @@ export const MODEL_CARD = {
     },
     {
       label: "HOW AI IS USED",
-      content: "Rule-based risk scoring generates the risk score. Claude API generates ONLY plain-English explanations and kind message drafts. The LLM never decides who is flagged. It only explains."
+      content: "Rule-based scoring generates the support signal. For the hackathon demo, Claude-style explanations and kind message drafts are pre-generated so no API key is exposed in the browser. In production, the LLM would run through a backend and would never decide who is flagged. It only explains."
     },
     {
       label: "HUMAN IN THE LOOP",

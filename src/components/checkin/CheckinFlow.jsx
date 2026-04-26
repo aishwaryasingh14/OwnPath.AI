@@ -19,11 +19,59 @@ export default function CheckinFlow() {
   const [barriers, setBarriers] = useState([]);
   const [supportPreference, setSupportPreference] = useState("none");
   const [weather, setWeather] = useState(null);
+  const [checkinsOff, setCheckinsOff] = useState(false);
 
-  const participant = DEMO_PARTICIPANTS.find(p => p.id === participantToken)
-    || DEMO_PARTICIPANTS[0];
+  const participant = DEMO_PARTICIPANTS.find(p => p.id === participantToken);
 
   useEffect(() => { getTucsonWeather().then(setWeather); }, []);
+
+  if (!participant) {
+    return (
+      <div style={{
+        minHeight: "100vh",
+        background: "var(--bg-warm)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "1.5rem"
+      }}>
+        <div className="card" style={{ maxWidth: 420, textAlign: "center" }}>
+          <div style={{ fontSize: "2rem", marginBottom: "0.75rem" }}>🔒</div>
+          <h1 style={{ fontSize: "1.35rem", marginBottom: "0.5rem" }}>This check-in link is not active</h1>
+          <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", lineHeight: 1.6 }}>
+            Please use the link sent by Caridad Community Kitchen or ask staff for a new one.
+          </p>
+          <Link to="/" className="btn-primary" style={{ marginTop: "1rem", display: "inline-flex", textDecoration: "none" }}>
+            Back to OwnPath
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (checkinsOff) {
+    return (
+      <div style={{
+        minHeight: "100vh",
+        background: "var(--bg-warm)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "1.5rem"
+      }}>
+        <div className="card" style={{ maxWidth: 420, textAlign: "center" }}>
+          <div style={{ fontSize: "2rem", marginBottom: "0.75rem" }}>✓</div>
+          <h1 style={{ fontSize: "1.35rem", marginBottom: "0.5rem" }}>Check-ins turned off</h1>
+          <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", lineHeight: 1.6 }}>
+            Thanks, {participant.firstName}. We will stop sending nightly check-ins. You can ask staff to turn them back on any time.
+          </p>
+          <Link to="/" className="btn-primary" style={{ marginTop: "1rem", display: "inline-flex", textDecoration: "none" }}>
+            Back to OwnPath
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const handleFeeling = (rating) => {
     setFeelingRating(rating);
@@ -31,6 +79,7 @@ export default function CheckinFlow() {
   };
   const handleBarriers = (b) => { setBarriers(b); setStep(2); };
   const handleSupport  = (p) => { setSupportPreference(p); setStep(3); };
+  const handleAdjust = () => setStep(2);
 
   const skipBarriers = feelingRating >= 4;
   const visibleSteps = skipBarriers ? [STEPS[0], STEPS[2], STEPS[3]] : STEPS;
@@ -131,6 +180,8 @@ export default function CheckinFlow() {
             supportPreference={supportPreference}
             weather={weather}
             lang={lang}
+            onAdjust={handleAdjust}
+            onTurnOff={() => setCheckinsOff(true)}
           />
         )}
       </main>

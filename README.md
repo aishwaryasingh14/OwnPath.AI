@@ -1,4 +1,6 @@
-# OwnPath
+# OwnPath.AI
+
+Built by Aishwarya Singh for Hack Arizona 2026.
 
 Participant support tool for Caridad Community Kitchen's free 10-week culinary training program.
 
@@ -13,7 +15,7 @@ OwnPath gives participants a friendly, SMS-style nightly check-in (no app downlo
 
 - React 18 + Vite
 - React Router v6
-- Claude API (`claude-sonnet-4-6`) for explanation generation
+- Pre-generated Claude-style explanations and message drafts for a stable demo
 - NWS Weather API (free, no key required) for Tucson forecast
 - Zero backend — runs entirely in the browser
 
@@ -21,8 +23,6 @@ OwnPath gives participants a friendly, SMS-style nightly check-in (no app downlo
 
 ```bash
 npm install
-cp .env .env.local  # Add your Anthropic API key
-# Edit .env.local: VITE_ANTHROPIC_API_KEY=sk-ant-...
 npm run dev
 ```
 
@@ -44,9 +44,9 @@ npm run dev
 - **What-If Simulator**: Interactive probability calculator for staff
 - **Model card**: Visible in the app — what the model sees, what it never touches
 
-## Note on API key
+## Security note
 
-In production, API calls would be proxied through a backend. For the hackathon demo, `VITE_ANTHROPIC_API_KEY` is used client-side. The app includes graceful fallbacks if the key is missing or the API is unavailable.
+This is a static hackathon demo with mock participant data. The staff passcode is only a demo gate, not production authentication. Do not put real participant data or API keys in the browser build; a production version should use backend authentication, server-side AI calls, real consent logging, and encrypted storage.
 
 
 ---

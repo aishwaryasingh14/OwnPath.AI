@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate, Link } from "react-router-dom";
 import CheckinFlow from "./components/checkin/CheckinFlow";
 import StaffDashboard from "./components/staff/StaffDashboard";
@@ -412,41 +413,80 @@ function ProblemSection() {
 }
 
 function DemoCTA() {
+  const [showMoreScenarios, setShowMoreScenarios] = useState(false);
+
   return (
     <section style={{ background: "var(--bg-card)", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", padding: "5rem 2rem" }}>
       <div style={{ maxWidth: 900, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
           <h2 style={{ fontSize: "clamp(1.5rem, 3vw, 2rem)", letterSpacing: "-0.015em", marginBottom: "0.75rem" }}>See it in action</h2>
-          <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}>Two entry points — participant and staff — designed for completely different contexts.</p>
+          <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}>Start with Rosa's journey, then follow the same support signal into the staff dashboard.</p>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.25rem" }}>
           <div className="card hover-lift" style={{ padding: "2rem" }}>
             <div style={{ width: 44, height: 44, borderRadius: "var(--radius-sm)", background: "rgba(212,80,10,0.08)", border: "1px solid rgba(212,80,10,0.18)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "1rem" }}>
               <Icon name="phone" size={20} color="var(--brand-primary)" />
             </div>
-            <h3 style={{ fontSize: "1.1rem", marginBottom: "0.5rem" }}>Participant Check-in</h3>
+            <h3 style={{ fontSize: "1.1rem", marginBottom: "0.35rem" }}>Try a participant check-in</h3>
             <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)", lineHeight: 1.65, marginBottom: "1.5rem" }}>
-              4-screen conversational flow. EN / ES / FR. Real Tucson resources. Works on any phone — no app, no login.
+              Start with a real example from the program: Rosa is in week 3 and needs help with transportation.
             </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
-              {[
-                { to: "/checkin/P001", label: "Rosa M. — transportation barrier" },
-                { to: "/checkin/P002", label: "Marcus T. — housing stress" },
-                { to: "/checkin/P003", label: "Diana R. — childcare gap" }
-              ].map(link => (
-                <Link key={link.to} to={link.to} style={{
-                  display: "flex", alignItems: "center", justifyContent: "space-between",
-                  padding: "0.6rem 0.875rem", borderRadius: "var(--radius-sm)",
-                  border: "1px solid var(--border)", background: "var(--bg-warm)",
-                  fontSize: "0.8rem", fontWeight: 500, color: "var(--text-primary)",
-                  textDecoration: "none", transition: "all 0.18s ease"
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.65rem" }}>
+              <Link to="/checkin/P001" style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                padding: "0.8rem 1rem", borderRadius: "var(--radius-sm)",
+                border: "1.5px solid var(--brand-primary)", background: "rgba(212,80,10,0.06)",
+                fontSize: "0.86rem", fontWeight: 700, color: "var(--brand-primary)",
+                textDecoration: "none", transition: "all 0.18s ease"
+              }}
+                onMouseEnter={e => { e.currentTarget.style.background = "rgba(212,80,10,0.12)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "rgba(212,80,10,0.06)"; e.currentTarget.style.transform = ""; }}
+              >
+                <span>See Rosa's check-in <span style={{ fontWeight: 500, color: "var(--text-muted)" }}>(transportation challenge)</span></span>
+                <Icon name="arrow" size={14} color="var(--brand-primary)" />
+              </Link>
+
+              <button
+                type="button"
+                onClick={() => setShowMoreScenarios(prev => !prev)}
+                style={{
+                  alignSelf: "flex-start",
+                  border: "none",
+                  background: "transparent",
+                  padding: "0.1rem 0",
+                  color: "var(--text-muted)",
+                  fontSize: "0.78rem",
+                  textDecoration: "underline",
+                  cursor: "pointer"
                 }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--brand-primary)"; e.currentTarget.style.background = "rgba(212,80,10,0.04)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.background = "var(--bg-warm)"; }}
-                >
-                  {link.label} <Icon name="arrow" size={13} color="var(--text-muted)" />
-                </Link>
-              ))}
+              >
+                {showMoreScenarios ? "Hide more scenarios" : "Explore more scenarios"}
+              </button>
+
+              {showMoreScenarios && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", animation: "fadeInUp 0.22s ease both" }}>
+                  {[
+                    { to: "/checkin/P002", label: "Marcus T. — housing stress" },
+                    { to: "/checkin/P003", label: "Diana R. — childcare gap" }
+                  ].map(link => (
+                    <Link key={link.to} to={link.to} style={{
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                      padding: "0.6rem 0.875rem", borderRadius: "var(--radius-sm)",
+                      border: "1px solid var(--border)", background: "var(--bg-warm)",
+                      fontSize: "0.8rem", fontWeight: 500, color: "var(--text-primary)",
+                      textDecoration: "none", transition: "all 0.18s ease"
+                    }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--brand-primary)"; e.currentTarget.style.background = "rgba(212,80,10,0.04)"; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.background = "var(--bg-warm)"; }}
+                    >
+                      {link.label} <Icon name="arrow" size={13} color="var(--text-muted)" />
+                    </Link>
+                  ))}
+                </div>
+              )}
+              <p style={{ fontSize: "0.72rem", color: "var(--text-muted)", lineHeight: 1.5, marginTop: "0.2rem" }}>
+                Demo uses real-world scenarios based on Caridad participant needs.
+              </p>
             </div>
           </div>
 
