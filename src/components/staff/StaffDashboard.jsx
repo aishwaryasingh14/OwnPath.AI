@@ -193,7 +193,7 @@ export default function StaffDashboard() {
                   marginBottom: "0.875rem"
                 }}>
                   <h2 style={{ fontSize: "1.05rem" }}>
-                    {filter === "attention" ? "Needs Attention" : "All Participants"}
+                    {filter === "attention" ? "May Benefit from Support" : "All Participants"}
                     <span style={{
                       fontSize: "0.72rem", color: "var(--text-muted)",
                       fontFamily: "'DM Sans', sans-serif", fontWeight: 500, marginLeft: "0.4rem"
@@ -201,7 +201,7 @@ export default function StaffDashboard() {
                   </h2>
                   <div style={{ display: "flex", gap: "0.35rem" }}>
                     {[
-                      { id: "attention", label: "⚠️ Needs attention" },
+                      { id: "attention", label: "⚠️ May benefit from support" },
                       { id: "all",       label: "All participants" }
                     ].map(f => (
                       <button

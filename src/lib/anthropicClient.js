@@ -42,25 +42,33 @@ const PARTICIPANT_MESSAGES = {
     en: (name, barriers) =>
       `Thanks for being honest with us, ${name} — that takes real courage. ${barriers.includes("transportation") ? "We've shared some bus route info below." : "We hear you."} You've made it this far, and that matters. See you tomorrow at Caridad. 🍳`,
     es: (name) =>
-      `Gracias por ser honesto/a con nosotros, ${name} — eso requiere mucho valor. Llevas un buen trecho recorrido, y eso importa. ¡Hasta mañana en Caridad! 🍳`
+      `Gracias por ser honesto/a con nosotros, ${name} — eso requiere mucho valor. Llevas un buen trecho recorrido, y eso importa. ¡Hasta mañana en Caridad! 🍳`,
+    fr: (name) =>
+      `Merci d'être honnête avec nous, ${name} — cela demande beaucoup de courage. Vous avez fait du chemin jusqu'ici, et ça compte. À demain chez Caridad. 🍳`
   },
   worried: {
     en: (name, barriers) =>
       `Thanks for checking in, ${name}. ${barriers.includes("childcare") ? "We've included some childcare resources below." : barriers.includes("transportation") ? "Check out the Sun Tran info below — Route 8 stops right near us." : "It's okay to have days that feel uncertain."} You're building something real. See you tomorrow. 🍳`,
     es: (name) =>
-      `Gracias por reportarte, ${name}. Está bien tener días que se sienten inciertos — estás construyendo algo real. ¡Hasta mañana en Caridad! 🍳`
+      `Gracias por reportarte, ${name}. Está bien tener días que se sienten inciertos — estás construyendo algo real. ¡Hasta mañana en Caridad! 🍳`,
+    fr: (name) =>
+      `Merci de nous donner de vos nouvelles, ${name}. Il est normal d'avoir des jours incertains — vous construisez quelque chose de réel. À demain chez Caridad. 🍳`
   },
   okay: {
     en: (name) =>
       `Glad to hear from you, ${name}. Steady days like today are what the whole program is built on. Rest up and we'll see you tomorrow morning at Caridad. 🍳`,
     es: (name) =>
-      `Qué bueno saber de ti, ${name}. Los días constantes como hoy son la base de todo el programa. Descansa y te vemos mañana en Caridad. 🍳`
+      `Qué bueno saber de ti, ${name}. Los días constantes como hoy son la base de todo el programa. Descansa y te vemos mañana en Caridad. 🍳`,
+    fr: (name) =>
+      `Heureux d'avoir de vos nouvelles, ${name}. Les jours réguliers comme aujourd'hui sont la base de tout le programme. Reposez-vous et à demain chez Caridad. 🍳`
   },
   great: {
     en: (name) =>
       `Love the energy, ${name}! 🌟 Rest up tonight — you've earned it. See you tomorrow at Caridad for another great day.`,
     es: (name) =>
-      `¡Qué buena energía, ${name}! 🌟 Descansa esta noche — te lo has ganado. Hasta mañana en Caridad.`
+      `¡Qué buena energía, ${name}! 🌟 Descansa esta noche — te lo has ganado. Hasta mañana en Caridad.`,
+    fr: (name) =>
+      `Quelle énergie, ${name} ! 🌟 Reposez-vous ce soir — vous l'avez mérité. À demain chez Caridad pour une autre belle journée.`
   }
 };
 
@@ -104,12 +112,13 @@ export async function generateStaffExplanation(participant, riskResult) {
   };
 }
 
-export async function generateParticipantMessage(participant, selectedBarriers, weatherContext) {
+export async function generateParticipantMessage(participant, selectedBarriers, weatherContext, lang = "en") {
   await delay(700 + Math.random() * 500);
   const key = getRatingKey(participant.feelingRating || 3);
   const template = PARTICIPANT_MESSAGES[key];
   return {
     english: template.en(participant.firstName, selectedBarriers),
-    spanish: template.es(participant.firstName, selectedBarriers)
+    spanish: template.es(participant.firstName, selectedBarriers),
+    french:  template.fr(participant.firstName, selectedBarriers)
   };
 }

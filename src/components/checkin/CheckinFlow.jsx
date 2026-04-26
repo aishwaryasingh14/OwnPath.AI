@@ -112,9 +112,9 @@ export default function CheckinFlow() {
         }}>
           <span>🌡️</span>
           <span>
-            {lang === "es"
-              ? `Mañana: ${weather.temp}°F — planifica tu viaje con tiempo.`
-              : `Tomorrow's forecast: ${weather.temp}°F — plan your ride early and stay hydrated.`}
+            {lang === "es" ? `Mañana: ${weather.temp}°F — planifica tu viaje con tiempo.`
+            : lang === "fr" ? `Demain : ${weather.temp}°F — planifiez votre trajet à l'avance.`
+            : `Tomorrow's forecast: ${weather.temp}°F — plan your ride early and stay hydrated.`}
           </span>
         </div>
       )}

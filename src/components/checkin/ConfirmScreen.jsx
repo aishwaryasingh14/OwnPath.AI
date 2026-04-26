@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import LoadingSpinner from "../common/LoadingSpinner";
 import { SUPPORT_RESOURCES, BARRIER_RESOURCE_MAP } from "../../data/resources";
 import { generateParticipantMessage } from "../../lib/anthropicClient";
+import { t, COMMON } from "../../lib/i18n";
 
 export default function ConfirmScreen({ participant, barriers, supportPreference, weather, lang }) {
   const [message, setMessage] = useState(null);
@@ -15,7 +16,8 @@ export default function ConfirmScreen({ participant, barriers, supportPreference
     generateParticipantMessage(
       { ...participant, supportPreference },
       barriers.filter(b => b !== "skip"),
-      weatherCtx
+      weatherCtx,
+      lang
     ).then(msg => {
       setMessage(msg);
       setLoading(false);
@@ -31,10 +33,10 @@ export default function ConfirmScreen({ participant, barriers, supportPreference
 
   const showResources = supportPreference === "resources" && relevantResources.length > 0;
 
+  const msgText = lang === "fr" ? message?.french : lang === "es" ? message?.spanish : message?.english;
+
   return (
     <div className="screen-transition" style={{ textAlign: "center" }}>
-
-      {/* Success circle */}
       <div style={{
         width: 80, height: 80, borderRadius: "50%",
         background: "linear-gradient(135deg, rgba(44,95,46,0.15), rgba(44,95,46,0.25))",
@@ -47,95 +49,62 @@ export default function ConfirmScreen({ participant, barriers, supportPreference
         <span style={{ fontSize: "2rem" }}>✓</span>
       </div>
 
-      {/* Message block */}
       <div style={{
-        background: "var(--bg-card)",
-        border: "1px solid var(--border)",
-        borderRadius: "var(--radius-lg)",
-        padding: "1.25rem 1.5rem",
-        marginBottom: "1.25rem",
-        boxShadow: "var(--shadow)",
-        minHeight: 80,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center"
+        background: "var(--bg-card)", border: "1px solid var(--border)",
+        borderRadius: "var(--radius-lg)", padding: "1.25rem 1.5rem",
+        marginBottom: "1.25rem", boxShadow: "var(--shadow)",
+        minHeight: 80, display: "flex", alignItems: "center", justifyContent: "center"
       }}>
         {loading ? (
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--text-muted)", fontSize: "0.875rem" }}>
             <LoadingSpinner size={18} />
-            <span>{lang === "es" ? "Preparando tu mensaje..." : "Preparing your message..."}</span>
+            <span>{t(lang, COMMON.preparing)}</span>
           </div>
         ) : (
           <p style={{
-            fontSize: "1rem",
-            color: "var(--text-primary)",
-            lineHeight: 1.65,
-            opacity: visible ? 1 : 0,
-            transform: visible ? "none" : "translateY(6px)",
+            fontSize: "1rem", color: "var(--text-primary)", lineHeight: 1.65,
+            opacity: visible ? 1 : 0, transform: visible ? "none" : "translateY(6px)",
             transition: "all 0.4s ease"
           }}>
-            {lang === "es" ? message?.spanish : message?.english}
+            {msgText}
           </p>
         )}
       </div>
 
-      {/* Staff contact notice */}
       {supportPreference === "staff_contact" && (
         <div style={{
-          background: "rgba(44,95,46,0.08)",
-          border: "1px solid rgba(44,95,46,0.22)",
-          borderRadius: "var(--radius-sm)",
-          padding: "0.875rem 1rem",
-          marginBottom: "1.25rem",
-          fontSize: "0.875rem",
-          color: "var(--brand-secondary)",
-          fontWeight: 500
+          background: "rgba(44,95,46,0.08)", border: "1px solid rgba(44,95,46,0.22)",
+          borderRadius: "var(--radius-sm)", padding: "0.875rem 1rem",
+          marginBottom: "1.25rem", fontSize: "0.875rem", color: "var(--brand-secondary)", fontWeight: 500
         }}>
-          {lang === "es"
-            ? "👋 Alguien del equipo se pondrá en contacto mañana por la mañana."
-            : "👋 A staff member will reach out tomorrow morning."}
+          {t(lang, COMMON.staffContact)}
         </div>
       )}
 
       {supportPreference === "peer" && (
         <div style={{
-          background: "rgba(44,95,46,0.08)",
-          border: "1px solid rgba(44,95,46,0.22)",
-          borderRadius: "var(--radius-sm)",
-          padding: "0.875rem 1rem",
-          marginBottom: "1.25rem",
-          fontSize: "0.875rem",
-          color: "var(--brand-secondary)",
-          fontWeight: 500
+          background: "rgba(44,95,46,0.08)", border: "1px solid rgba(44,95,46,0.22)",
+          borderRadius: "var(--radius-sm)", padding: "0.875rem 1rem",
+          marginBottom: "1.25rem", fontSize: "0.875rem", color: "var(--brand-secondary)", fontWeight: 500
         }}>
-          {lang === "es"
-            ? "💬 Conectaremos contigo un compañero/a mañana por la mañana."
-            : "💬 We'll connect you with a program peer tomorrow morning."}
+          {t(lang, COMMON.peerContact)}
         </div>
       )}
 
-      {/* Resources */}
       {showResources && (
         <div style={{ textAlign: "left", marginBottom: "1.5rem" }}>
           <div style={{
-            fontSize: "0.72rem",
-            fontWeight: 700,
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            color: "var(--text-muted)",
-            marginBottom: "0.6rem"
+            fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase",
+            letterSpacing: "0.08em", color: "var(--text-muted)", marginBottom: "0.6rem"
           }}>
-            {lang === "es" ? "Recursos disponibles" : "Available resources"}
+            {t(lang, COMMON.resources)}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
             {relevantResources.map((r, i) => (
               <div key={i} style={{
-                background: "var(--bg-card)",
-                border: "1px solid var(--border)",
-                borderRadius: "var(--radius-sm)",
-                padding: "0.875rem 1rem",
-                borderLeft: "3px solid var(--brand-primary)",
-                boxShadow: "var(--shadow)"
+                background: "var(--bg-card)", border: "1px solid var(--border)",
+                borderRadius: "var(--radius-sm)", padding: "0.875rem 1rem",
+                borderLeft: "3px solid var(--brand-primary)", boxShadow: "var(--shadow)"
               }}>
                 <div style={{ fontWeight: 700, fontSize: "0.875rem", marginBottom: "0.2rem" }}>{r.name}</div>
                 <div style={{ fontSize: "0.78rem", color: "var(--text-secondary)", marginBottom: "0.3rem" }}>{r.detail}</div>
@@ -150,29 +119,19 @@ export default function ConfirmScreen({ participant, barriers, supportPreference
         </div>
       )}
 
-      {/* Sign-off */}
       <div style={{
-        padding: "1rem",
-        background: "rgba(212,80,10,0.04)",
-        borderRadius: "var(--radius-sm)",
-        border: "1px solid rgba(212,80,10,0.1)",
-        marginBottom: "1.25rem"
+        padding: "1rem", background: "rgba(212,80,10,0.04)",
+        borderRadius: "var(--radius-sm)", border: "1px solid rgba(212,80,10,0.1)", marginBottom: "1.25rem"
       }}>
         <p style={{ fontSize: "1rem", color: "var(--text-secondary)", marginBottom: "0.2rem" }}>
-          {lang === "es" ? "🍳 Hasta mañana en Caridad." : "🍳 See you tomorrow at Caridad."}
+          {t(lang, COMMON.seeYou)}
         </p>
-        <p style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-          845 N Main Ave, Tucson, AZ 85705
-        </p>
+        <p style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>845 N Main Ave, Tucson, AZ 85705</p>
       </div>
 
       <div style={{ display: "flex", gap: "0.6rem", justifyContent: "center" }}>
-        <button className="btn-ghost" style={{ fontSize: "0.78rem" }}>
-          {lang === "es" ? "Ajustar preferencias" : "Adjust my preferences"}
-        </button>
-        <button className="btn-ghost" style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>
-          {lang === "es" ? "Cancelar recordatorios" : "Turn off check-ins"}
-        </button>
+        <button className="btn-ghost" style={{ fontSize: "0.78rem" }}>{t(lang, COMMON.adjust)}</button>
+        <button className="btn-ghost" style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>{t(lang, COMMON.turnOff)}</button>
       </div>
     </div>
   );

@@ -24,7 +24,7 @@ export default function HeaderStats({ participants, riskResults }) {
       icon: "alert",
       iconColor: "var(--risk-medium)",
       iconBg: "rgba(230,126,34,0.08)",
-      label: "Needs attention",
+      label: "May benefit from support",
       value: high + medium,
       sub: `${high} high · ${medium} medium risk`,
       bar: Math.round(((high + medium) / total) * 100),
