@@ -48,11 +48,6 @@ npm run dev
 
 In production, API calls would be proxied through a backend. For the hackathon demo, `VITE_ANTHROPIC_API_KEY` is used client-side. The app includes graceful fallbacks if the key is missing or the API is unavailable.
 
-## Deploy
-
-```bash
-npx vercel --prod
-```
 
 ---
 
