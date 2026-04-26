@@ -17,6 +17,14 @@ const SUPPORT_LABELS = {
   none:          { icon: "✓",  label: "No contact requested" }
 };
 
+const SUPPORT_BOUNDARIES = {
+  resources: "Do not call unless Rosa asks. Share resources only.",
+  reminder: "Reminder is okay. Do not escalate to a call unless they opt in.",
+  staff_contact: "Direct staff outreach is allowed because they asked for it.",
+  peer: "Peer connection is allowed. Staff still confirms the match first.",
+  none: "No direct outreach. Staff may observe patterns, but participant chose no contact."
+};
+
 export default function ParticipantCard({ participant, riskResult, onSelect, isSelected }) {
   const [aiData, setAiData] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
@@ -27,6 +35,9 @@ export default function ParticipantCard({ participant, riskResult, onSelect, isS
 
   const cfg = LEVEL_CONFIG[riskResult.level];
   const supportMeta = SUPPORT_LABELS[participant.supportPreference] || SUPPORT_LABELS.none;
+  const supportBoundary = SUPPORT_BOUNDARIES[participant.supportPreference] || SUPPORT_BOUNDARIES.none;
+  const canContact = ["staff_contact", "peer", "reminder"].includes(participant.supportPreference);
+  const canSendResources = participant.supportPreference === "resources" || participant.supportPreference === "staff_contact";
 
   const loadAI = async () => {
     if (aiData || aiLoading) return;
@@ -177,6 +188,26 @@ export default function ParticipantCard({ participant, riskResult, onSelect, isS
             <span>{supportMeta.icon}</span>
             <span>{supportMeta.label}</span>
           </div>
+          <div style={{
+            display: "flex",
+            gap: "0.6rem",
+            alignItems: "flex-start",
+            padding: "0.75rem 0.875rem",
+            background: "rgba(44,95,46,0.06)",
+            border: "1px solid rgba(44,95,46,0.16)",
+            borderRadius: "var(--radius-sm)",
+            marginBottom: "1rem"
+          }}>
+            <span style={{ color: "var(--brand-secondary)", fontWeight: 800, lineHeight: 1 }}>✓</span>
+            <div>
+              <div style={{ fontSize: "0.68rem", fontWeight: 800, color: "var(--brand-secondary)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "0.15rem" }}>
+                Consent boundary
+              </div>
+              <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: 1.5 }}>
+                {supportBoundary.replace("Rosa", participant.firstName)}
+              </p>
+            </div>
+          </div>
 
           {/* All risk factors */}
           <div style={{ marginBottom: "1rem" }}>
@@ -258,10 +289,10 @@ export default function ParticipantCard({ participant, riskResult, onSelect, isS
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.45rem" }}>
             {[
-              { id: "transit", label: "✉️ Send Sun Tran info",      show: participant.reportedBarriers?.includes("transportation") },
-              { id: "call",    label: "📞 Quick check-in call",     show: participant.supportPreference !== "none" },
-              { id: "makeup",  label: "🗓️ Offer make-up session",   show: participant.missedDays > 0 },
-              { id: "peer",    label: "💬 Connect with peer",       show: true }
+              { id: "transit", label: "✉️ Send Sun Tran info",      show: participant.reportedBarriers?.includes("transportation") && canSendResources },
+              { id: "call",    label: "📞 Quick check-in call",     show: canContact },
+              { id: "makeup",  label: "🗓️ Offer make-up session",   show: participant.missedDays > 0 && participant.supportPreference !== "none" },
+              { id: "peer",    label: "💬 Connect with peer",       show: participant.supportPreference === "peer" || participant.supportPreference === "staff_contact" }
             ].filter(a => a.show).slice(0, 4).map(action => (
               <button
                 key={action.id}
@@ -283,6 +314,30 @@ export default function ParticipantCard({ participant, riskResult, onSelect, isS
                 {actionTaken === action.id ? "✓ Done" : action.label}
               </button>
             ))}
+          </div>
+
+          <div style={{
+            marginTop: "0.75rem",
+            padding: "0.75rem 0.875rem",
+            borderRadius: "var(--radius-sm)",
+            border: actionTaken ? "1px solid rgba(44,95,46,0.18)" : "1px dashed var(--border)",
+            background: actionTaken ? "rgba(44,95,46,0.06)" : "rgba(255,255,255,0.55)"
+          }}>
+            <div style={{
+              fontSize: "0.68rem",
+              fontWeight: 800,
+              color: actionTaken ? "var(--brand-secondary)" : "var(--text-muted)",
+              textTransform: "uppercase",
+              letterSpacing: "0.07em",
+              marginBottom: "0.3rem"
+            }}>
+              Action receipt
+            </div>
+            <p style={{ fontSize: "0.78rem", color: "var(--text-secondary)", lineHeight: 1.5 }}>
+              {actionTaken
+                ? `${participant.firstName}'s preference was checked before marking this action done. Next review: tomorrow morning.`
+                : "Choose an action only if it matches the participant's stated preference. Nothing sends automatically."}
+            </p>
           </div>
 
           <button

@@ -8,10 +8,13 @@ import ParticipantCard from "./ParticipantCard";
 import WhatIfSimulator from "./WhatIfSimulator";
 import CohortInsights from "./CohortInsights";
 import ModelCardTab from "./ModelCardTab";
+import ParticipantVoicePanel from "./ParticipantVoicePanel";
+import AutonomyAuditTab from "./AutonomyAuditTab";
 
 const TABS = [
   { id: "queue",    icon: "📋", label: "Today's Queue" },
   { id: "insights", icon: "📊", label: "Insights" },
+  { id: "autonomy", icon: "🛡️", label: "Autonomy Audit" },
   { id: "model",    icon: "📋", label: "Model Card" }
 ];
 
@@ -252,6 +255,7 @@ export default function StaffDashboard() {
 
               {/* Right: simulator + insights */}
               <div style={{ position: "sticky", top: 68, display: "flex", flexDirection: "column", gap: "1rem" }}>
+                <ParticipantVoicePanel participant={selParticipant} />
                 <WhatIfSimulator participant={selParticipant} riskResult={selRisk} />
                 <CohortInsights weather={weather} />
               </div>
@@ -327,6 +331,11 @@ export default function StaffDashboard() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* ── Autonomy Audit tab ── */}
+        {tab === "autonomy" && (
+          <AutonomyAuditTab />
         )}
 
         {/* ── Model Card tab ── */}

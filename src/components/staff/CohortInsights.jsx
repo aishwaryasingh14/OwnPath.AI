@@ -2,13 +2,24 @@ import { DEMO_PARTICIPANTS } from "../../data/participants";
 import { calculateRiskScore } from "../../lib/riskEngine";
 
 export default function CohortInsights({ weather }) {
-  const transportIssues = DEMO_PARTICIPANTS.filter(p =>
-    p.reportedBarriers?.includes("transportation")
-  ).length;
-
+  const riskResults = DEMO_PARTICIPANTS.map(p => calculateRiskScore(p, weather?.temp || 85));
+  const transportIssues = DEMO_PARTICIPANTS.filter(p => p.reportedBarriers?.includes("transportation")).length;
+  const childcareIssues = DEMO_PARTICIPANTS.filter(p => p.reportedBarriers?.includes("childcare")).length;
+  const housingIssues = DEMO_PARTICIPANTS.filter(p => p.reportedBarriers?.includes("housing")).length;
   const week3Count = DEMO_PARTICIPANTS.filter(p => p.currentWeek === 3).length;
-
   const recoveryExamples = DEMO_PARTICIPANTS.filter(p => p.recoveryNote);
+  const optedIntoSupport = DEMO_PARTICIPANTS.filter(p =>
+    ["resources", "reminder", "staff_contact", "peer"].includes(p.supportPreference)
+  ).length;
+  const noContact = DEMO_PARTICIPANTS.filter(p => p.supportPreference === "none").length;
+  const highOrMedium = riskResults.filter(r => r.level !== "low").length;
+
+  const patternRows = [
+    { label: "Transportation", value: transportIssues, color: "var(--brand-primary)" },
+    { label: "Childcare", value: childcareIssues, color: "var(--brand-accent)" },
+    { label: "Housing", value: housingIssues, color: "var(--brand-secondary)" }
+  ];
+  const maxPattern = Math.max(...patternRows.map(r => r.value), 1);
 
   return (
     <div className="card" style={{ marginTop: "1rem" }}>
@@ -25,8 +36,42 @@ export default function CohortInsights({ weather }) {
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.65rem" }}>
+          <div style={{
+            padding: "0.875rem",
+            background: "rgba(44,95,46,0.05)",
+            border: "1px solid rgba(44,95,46,0.16)",
+            borderRadius: "var(--radius-sm)"
+          }}>
+            <div style={{ fontSize: "0.68rem", color: "var(--text-muted)", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "0.25rem" }}>
+              Autonomy pulse
+            </div>
+            <div style={{ fontSize: "1.35rem", fontFamily: "'DM Serif Display', serif", color: "var(--brand-secondary)", lineHeight: 1 }}>
+              {noContact}
+            </div>
+            <p style={{ fontSize: "0.78rem", color: "var(--text-secondary)", lineHeight: 1.45, marginTop: "0.3rem" }}>
+              participants chose no contact. Their choice stays visible in staff workflow.
+            </p>
+          </div>
 
-        {/* Transport pattern */}
+          <div style={{
+            padding: "0.875rem",
+            background: "rgba(212,80,10,0.04)",
+            border: "1px solid rgba(212,80,10,0.14)",
+            borderRadius: "var(--radius-sm)"
+          }}>
+            <div style={{ fontSize: "0.68rem", color: "var(--text-muted)", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "0.25rem" }}>
+              Staff focus
+            </div>
+            <div style={{ fontSize: "1.35rem", fontFamily: "'DM Serif Display', serif", color: "var(--brand-primary)", lineHeight: 1 }}>
+              {highOrMedium}
+            </div>
+            <p style={{ fontSize: "0.78rem", color: "var(--text-secondary)", lineHeight: 1.45, marginTop: "0.3rem" }}>
+              may benefit from support out of {DEMO_PARTICIPANTS.length}; the rest stay out of the queue.
+            </p>
+          </div>
+        </div>
+
         {transportIssues >= 2 && (
           <div style={{
             padding: "0.875rem",
@@ -52,14 +97,45 @@ export default function CohortInsights({ weather }) {
           </div>
         )}
 
-        {/* Week 3 pattern */}
+        <div style={{
+          padding: "0.875rem",
+          background: "rgba(255,255,255,0.7)",
+          border: "1px solid var(--border)",
+          borderRadius: "var(--radius-sm)"
+        }}>
+          <div style={{ fontWeight: 600, fontSize: "0.875rem", marginBottom: "0.55rem", color: "var(--text-primary)" }}>
+            Fairness Slice: Barrier Types
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.45rem" }}>
+            {patternRows.map(row => (
+              <div key={row.label} style={{ display: "grid", gridTemplateColumns: "95px 1fr 24px", gap: "0.55rem", alignItems: "center" }}>
+                <span style={{ fontSize: "0.76rem", color: "var(--text-secondary)" }}>{row.label}</span>
+                <div style={{ height: 6, background: "var(--border)", borderRadius: 4, overflow: "hidden" }}>
+                  <div style={{
+                    height: "100%",
+                    width: `${Math.max(8, (row.value / maxPattern) * 100)}%`,
+                    background: row.color,
+                    borderRadius: 4
+                  }} />
+                </div>
+                <span style={{ fontSize: "0.74rem", color: "var(--text-muted)", fontFamily: "'JetBrains Mono', monospace", textAlign: "right" }}>
+                  {row.value}
+                </span>
+              </div>
+            ))}
+          </div>
+          <p style={{ fontSize: "0.72rem", color: "var(--text-muted)", lineHeight: 1.5, marginTop: "0.65rem" }}>
+            This helps staff check whether support is over-focused on one barrier while missing others.
+          </p>
+        </div>
+
         <div style={{
           padding: "0.875rem",
           background: "rgba(245,166,35,0.07)",
           border: "1px solid rgba(245,166,35,0.2)",
           borderRadius: "var(--radius-sm)"
         }}>
-          <div style={{ fontWeight: 600, fontSize: "0.875rem", marginBottom: "0.3rem", color: "#b07d0a" }}>
+          <div style={{ fontWeight: 600, fontSize: "0.875rem", marginBottom: "0.3rem", color: "#8a6100" }}>
             📅 Week 3 Cohort Watch
           </div>
           <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)", lineHeight: 1.55 }}>
@@ -68,7 +144,6 @@ export default function CohortInsights({ weather }) {
           </p>
         </div>
 
-        {/* Weather */}
         {weather?.isDangerous && (
           <div style={{
             padding: "0.875rem",
@@ -85,7 +160,6 @@ export default function CohortInsights({ weather }) {
           </div>
         )}
 
-        {/* Recovery stories */}
         {recoveryExamples.length > 0 && (
           <div style={{
             padding: "0.875rem",
@@ -107,9 +181,24 @@ export default function CohortInsights({ weather }) {
           </div>
         )}
 
-        {/* Summary note */}
+        <div style={{
+          padding: "0.875rem",
+          background: "rgba(212,80,10,0.04)",
+          border: "1px solid rgba(212,80,10,0.14)",
+          borderRadius: "var(--radius-sm)"
+        }}>
+          <div style={{ fontWeight: 600, fontSize: "0.875rem", marginBottom: "0.45rem", color: "var(--brand-primary)" }}>
+            Suggested 10-Minute Staff Huddle
+          </div>
+          <ol style={{ paddingLeft: "1rem", color: "var(--text-secondary)", fontSize: "0.8rem", lineHeight: 1.6 }}>
+            <li>Open with a group reminder about Sun Tran Day Passes.</li>
+            <li>Check Rosa's transportation resource preference before outreach.</li>
+            <li>Review no-contact choices so support stays opt-in.</li>
+          </ol>
+        </div>
+
         <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", lineHeight: 1.55 }}>
-          These are aggregate patterns from the current cohort. No individual data is shared here — individual details are on participant cards only.
+          These are aggregate patterns from the current cohort. {optedIntoSupport} participants opted into some support, and individual details stay on participant cards only.
         </p>
       </div>
     </div>

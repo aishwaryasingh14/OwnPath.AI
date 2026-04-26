@@ -7,6 +7,7 @@ export default function HeaderStats({ participants, riskResults }) {
   const high      = participants.filter((_, i) => riskResults[i]?.level === "high").length;
   const medium    = participants.filter((_, i) => riskResults[i]?.level === "medium").length;
   const low       = participants.filter((_, i) => riskResults[i]?.level === "low").length;
+  const optIn     = participants.filter(p => p.supportPreference !== "none").length;
   const pct       = Math.round((checkedIn / total) * 100);
 
   const stats = [
@@ -26,7 +27,7 @@ export default function HeaderStats({ participants, riskResults }) {
       iconBg: "rgba(230,126,34,0.08)",
       label: "May benefit from support",
       value: high + medium,
-      sub: `${high} high · ${medium} medium risk`,
+      sub: `${high} high · ${medium} medium support signals`,
       bar: Math.round(((high + medium) / total) * 100),
       barColor: high > 0 ? "var(--risk-high)" : "var(--risk-medium)"
     },
@@ -39,11 +40,21 @@ export default function HeaderStats({ participants, riskResults }) {
       sub: "low risk, no action needed",
       bar: Math.round((low / total) * 100),
       barColor: "var(--risk-low)"
+    },
+    {
+      icon: "shield",
+      iconColor: "var(--brand-secondary)",
+      iconBg: "rgba(44,95,46,0.08)",
+      label: "Opted into support",
+      value: optIn,
+      sub: `${total - optIn} chose no contact`,
+      bar: Math.round((optIn / total) * 100),
+      barColor: "var(--brand-secondary)"
     }
   ];
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.875rem", marginBottom: "1.5rem" }}>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.875rem", marginBottom: "1.5rem" }}>
       {stats.map((s, i) => (
         <div key={i} className="card" style={{ padding: "1.25rem" }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "0.75rem" }}>

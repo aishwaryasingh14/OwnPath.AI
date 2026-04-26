@@ -10,6 +10,7 @@ export default function WhatIfSimulator({ participant, riskResult }) {
   const base = riskResult.completionProbability;
   const totalDelta = checked.reduce((sum, idx) => sum + (items[idx]?.delta || 0), 0);
   const projected = Math.min(base + totalDelta, 99);
+  const selectedItems = checked.map(idx => items[idx]).filter(Boolean);
 
   const toggle = (idx) => {
     setChecked(prev => prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]);
@@ -183,6 +184,40 @@ export default function WhatIfSimulator({ participant, riskResult }) {
           </div>
         )}
       </div>
+
+      {selectedItems.length > 0 && (
+        <div style={{
+          borderRadius: "var(--radius-sm)",
+          border: "1px solid rgba(212,80,10,0.16)",
+          background: "rgba(212,80,10,0.04)",
+          padding: "0.875rem",
+          marginBottom: "0.75rem"
+        }}>
+          <div style={{
+            fontSize: "0.68rem",
+            fontWeight: 800,
+            color: "var(--brand-primary)",
+            textTransform: "uppercase",
+            letterSpacing: "0.07em",
+            marginBottom: "0.45rem"
+          }}>
+            Staff action plan
+          </div>
+          <ol style={{
+            paddingLeft: "1rem",
+            color: "var(--text-secondary)",
+            fontSize: "0.78rem",
+            lineHeight: 1.6
+          }}>
+            {selectedItems.map(item => (
+              <li key={item.label}>{item.label}</li>
+            ))}
+          </ol>
+          <p style={{ fontSize: "0.72rem", color: "var(--text-muted)", lineHeight: 1.5, marginTop: "0.55rem" }}>
+            Review the participant's stated preference before taking action. The simulator estimates impact; staff approves the plan.
+          </p>
+        </div>
+      )}
 
       <p style={{
         fontSize: "0.68rem", color: "var(--text-muted)", lineHeight: 1.5,

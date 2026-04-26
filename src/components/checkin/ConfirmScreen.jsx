@@ -4,6 +4,61 @@ import { SUPPORT_RESOURCES, BARRIER_RESOURCE_MAP } from "../../data/resources";
 import { generateParticipantMessage } from "../../lib/anthropicClient";
 import { t, COMMON } from "../../lib/i18n";
 
+const SUPPORT_PREF_LABELS = {
+  resources: {
+    en: "Resources only",
+    es: "Solo recursos",
+    fr: "Ressources seulement"
+  },
+  reminder: {
+    en: "Reminder tomorrow",
+    es: "Recordatorio mañana",
+    fr: "Rappel demain"
+  },
+  staff_contact: {
+    en: "Staff may reach out",
+    es: "El equipo puede contactarme",
+    fr: "L'équipe peut me contacter"
+  },
+  peer: {
+    en: "Peer connection",
+    es: "Conexión con un compañero/a",
+    fr: "Contact avec un pair"
+  },
+  none: {
+    en: "No contact needed",
+    es: "No necesito contacto",
+    fr: "Pas de contact nécessaire"
+  }
+};
+
+const BARRIER_LABELS = {
+  transportation: { en: "Getting there", es: "El transporte", fr: "Se déplacer" },
+  childcare: { en: "Childcare", es: "Cuidado de niños", fr: "Garde d'enfants" },
+  housing: { en: "Housing stress", es: "Vivienda", fr: "Logement" },
+  overwhelmed: { en: "Feeling overwhelmed", es: "Me siento agobiado/a", fr: "Me sentir dépassé(e)" },
+  money: { en: "Money stress", es: "Estrés económico", fr: "Stress financier" },
+  sick: { en: "Not feeling well", es: "No me siento bien", fr: "Ne pas me sentir bien" },
+  skip: { en: "Nothing shared", es: "Nada compartido", fr: "Rien partagé" }
+};
+
+const RECEIPT_COPY = {
+  title: { en: "Your choices are saved for tonight", es: "Tus decisiones están guardadas por hoy", fr: "Vos choix sont enregistrés pour ce soir" },
+  shared: { en: "Shared", es: "Compartido", fr: "Partagé" },
+  support: { en: "Support preference", es: "Preferencia de apoyo", fr: "Préférence de soutien" },
+  notCollected: { en: "Not collected", es: "No recopilado", fr: "Non collecté" },
+  notCollectedValue: {
+    en: "No location, immigration status, social media, or background data",
+    es: "Sin ubicación, estatus migratorio, redes sociales ni datos externos",
+    fr: "Pas de localisation, statut migratoire, médias sociaux ni données externes"
+  },
+  staffReview: {
+    en: "Staff can only see what you chose to share. Any outreach still needs approval.",
+    es: "El equipo solo ve lo que decidiste compartir. Cualquier contacto requiere aprobación.",
+    fr: "L'équipe ne voit que ce que vous avez choisi de partager. Tout contact demande une approbation."
+  }
+};
+
 export default function ConfirmScreen({ participant, barriers, supportPreference, weather, lang, onAdjust, onTurnOff }) {
   const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -34,6 +89,13 @@ export default function ConfirmScreen({ participant, barriers, supportPreference
   const showResources = supportPreference === "resources" && relevantResources.length > 0;
 
   const msgText = lang === "fr" ? message?.french : lang === "es" ? message?.spanish : message?.english;
+  const sharedLabels = barriers
+    .filter(Boolean)
+    .map(b => BARRIER_LABELS[b] ? t(lang, BARRIER_LABELS[b]) : b)
+    .filter((b, idx, arr) => arr.indexOf(b) === idx);
+  const sharedText = sharedLabels.length && !sharedLabels.includes(t(lang, BARRIER_LABELS.skip))
+    ? sharedLabels.join(", ")
+    : t(lang, BARRIER_LABELS.skip);
 
   return (
     <div className="screen-transition" style={{ textAlign: "center" }}>
@@ -127,6 +189,53 @@ export default function ConfirmScreen({ participant, barriers, supportPreference
           {t(lang, COMMON.seeYou)}
         </p>
         <p style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>845 N Main Ave, Tucson, AZ 85705</p>
+      </div>
+
+      <div style={{
+        textAlign: "left",
+        background: "rgba(44,95,46,0.05)",
+        border: "1px solid rgba(44,95,46,0.16)",
+        borderRadius: "var(--radius-sm)",
+        padding: "1rem",
+        marginBottom: "1.25rem"
+      }}>
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "0.45rem",
+          fontSize: "0.78rem",
+          fontWeight: 800,
+          color: "var(--brand-secondary)",
+          marginBottom: "0.75rem",
+          textTransform: "uppercase",
+          letterSpacing: "0.06em"
+        }}>
+          <span>✓</span>
+          {t(lang, RECEIPT_COPY.title)}
+        </div>
+        {[
+          { label: t(lang, RECEIPT_COPY.shared), value: sharedText },
+          { label: t(lang, RECEIPT_COPY.support), value: t(lang, SUPPORT_PREF_LABELS[supportPreference] || SUPPORT_PREF_LABELS.none) },
+          { label: t(lang, RECEIPT_COPY.notCollected), value: t(lang, RECEIPT_COPY.notCollectedValue) }
+        ].map(row => (
+          <div key={row.label} style={{
+            display: "grid",
+            gridTemplateColumns: "105px 1fr",
+            gap: "0.75rem",
+            padding: "0.4rem 0",
+            borderTop: "1px solid rgba(44,95,46,0.1)"
+          }}>
+            <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 700 }}>
+              {row.label}
+            </div>
+            <div style={{ fontSize: "0.78rem", color: "var(--text-secondary)", lineHeight: 1.45 }}>
+              {row.value}
+            </div>
+          </div>
+        ))}
+        <p style={{ fontSize: "0.72rem", color: "var(--brand-secondary)", lineHeight: 1.5, marginTop: "0.55rem" }}>
+          {t(lang, RECEIPT_COPY.staffReview)}
+        </p>
       </div>
 
       <div style={{ display: "flex", gap: "0.6rem", justifyContent: "center" }}>
