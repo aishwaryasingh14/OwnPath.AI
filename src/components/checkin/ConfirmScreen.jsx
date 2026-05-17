@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import LoadingSpinner from "../common/LoadingSpinner";
 import { SUPPORT_RESOURCES, BARRIER_RESOURCE_MAP } from "../../data/resources";
-import { generateParticipantMessage } from "../../lib/anthropicClient";
+import { generateParticipantMessage } from "../../lib/groqClient";
 import { t, COMMON } from "../../lib/i18n";
 
 const SUPPORT_PREF_LABELS = {

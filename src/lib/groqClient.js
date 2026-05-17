@@ -1,5 +1,5 @@
-// AI responses are pre-generated from Claude claude-sonnet-4-6 and served statically
-// to avoid requiring an API key during the hackathon demo.
+// Calls /.netlify/functions/llm (Groq, server-side key).
+// Falls back to pre-written templates if the function is unreachable (e.g. local dev without netlify dev).
 
 const STAFF_EXPLANATIONS = {
   transportation: {
@@ -81,44 +81,64 @@ function getRatingKey(rating) {
 
 function getTopBarrier(factors) {
   for (const key of ["transportation", "housing", "childcare", "overwhelmed"]) {
-    if (factors.some(f => f.toLowerCase().includes(key.replace("overwhelmed", "overwhelm")
-      .replace("transportation", "transport")
-      .replace("childcare", "childcare")
-      .replace("housing", "housing")))) {
-      return key;
-    }
+    if (factors.some(f => f.toLowerCase().includes(
+      key === "overwhelmed" ? "overwhelm" : key
+    ))) return key;
   }
   return "default";
 }
 
-// Simulate realistic async delay to look like a real API call
-function delay(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+async function callLlmFunction(body) {
+  const res = await fetch("/.netlify/functions/llm", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`Function returned ${res.status}`);
+  return res.json();
 }
 
 export async function generateStaffExplanation(participant, riskResult) {
-  await delay(900 + Math.random() * 600);
-  const barrierKey = getTopBarrier(riskResult.factors);
-  const template = STAFF_EXPLANATIONS[barrierKey] || STAFF_EXPLANATIONS.default;
-  return {
-    explanation: template.explanation(participant.firstName, participant.currentWeek),
-    suggestedAction: template.suggestedAction,
-    messageDraft:
-      participant.supportPreference === "none" || participant.supportPreference === "reminder"
-        ? null
-        : typeof template.messageDraft === "function"
-        ? template.messageDraft(participant.firstName)
-        : template.messageDraft
-  };
+  try {
+    const data = await callLlmFunction({ type: "staff", participant, riskResult });
+    return {
+      explanation:     data.explanation,
+      suggestedAction: data.suggestedAction,
+      messageDraft:    data.messageDraft ?? null,
+    };
+  } catch {
+    // Fallback: pre-written templates
+    const barrierKey = getTopBarrier(riskResult.factors);
+    const template   = STAFF_EXPLANATIONS[barrierKey] || STAFF_EXPLANATIONS.default;
+    return {
+      explanation:     template.explanation(participant.firstName, participant.currentWeek),
+      suggestedAction: template.suggestedAction,
+      messageDraft:
+        participant.supportPreference === "none" || participant.supportPreference === "reminder"
+          ? null
+          : typeof template.messageDraft === "function"
+          ? template.messageDraft(participant.firstName)
+          : template.messageDraft,
+    };
+  }
 }
 
-export async function generateParticipantMessage(participant, selectedBarriers, weatherContext, lang = "en") {
-  await delay(700 + Math.random() * 500);
-  const key = getRatingKey(participant.feelingRating || 3);
-  const template = PARTICIPANT_MESSAGES[key];
-  return {
-    english: template.en(participant.firstName, selectedBarriers),
-    spanish: template.es(participant.firstName, selectedBarriers),
-    french:  template.fr(participant.firstName, selectedBarriers)
-  };
+export async function generateParticipantMessage(participant, selectedBarriers, _weatherContext, lang = "en") {
+  try {
+    const data = await callLlmFunction({ type: "participant", participant, selectedBarriers });
+    return {
+      english: data.english,
+      spanish: data.spanish,
+      french:  data.french,
+    };
+  } catch {
+    // Fallback: pre-written templates
+    const key      = getRatingKey(participant.feelingRating || 3);
+    const template = PARTICIPANT_MESSAGES[key];
+    return {
+      english: template.en(participant.firstName, selectedBarriers),
+      spanish: template.es(participant.firstName, selectedBarriers),
+      french:  template.fr(participant.firstName, selectedBarriers),
+    };
+  }
 }

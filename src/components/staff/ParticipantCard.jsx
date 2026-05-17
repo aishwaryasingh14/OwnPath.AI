@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { generateStaffExplanation } from "../../lib/anthropicClient";
+import { generateStaffExplanation } from "../../lib/groqClient";
 import LoadingSpinner from "../common/LoadingSpinner";
 import AnimatedNumber from "../common/AnimatedNumber";
 
