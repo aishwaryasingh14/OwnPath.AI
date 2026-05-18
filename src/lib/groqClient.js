@@ -123,6 +123,31 @@ export async function generateStaffExplanation(participant, riskResult) {
   }
 }
 
+export async function generateCohortNarration(participants, weather) {
+  try {
+    return await callLlmFunction({ type: "cohort", participants, weather });
+  } catch {
+    return null;
+  }
+}
+
+export async function extractBarriers(text, participantName) {
+  try {
+    return await callLlmFunction({ type: "barrier_extract", text, participantName });
+  } catch {
+    return { barriers: [], summary: text };
+  }
+}
+
+export async function generateInterventionRanking(participant, riskResult) {
+  try {
+    const data = await callLlmFunction({ type: "interventions", participant, riskResult });
+    return Array.isArray(data) ? data : (data.interventions || null);
+  } catch {
+    return null;
+  }
+}
+
 export async function generateParticipantMessage(participant, selectedBarriers, _weatherContext, lang = "en") {
   try {
     const data = await callLlmFunction({ type: "participant", participant, selectedBarriers });

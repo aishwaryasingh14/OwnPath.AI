@@ -1,12 +1,37 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { calculateWhatIfDeltas } from "../../lib/riskEngine";
+import { generateInterventionRanking } from "../../lib/groqClient";
 import AnimatedNumber from "../common/AnimatedNumber";
+import LoadingSpinner from "../common/LoadingSpinner";
 
 export default function WhatIfSimulator({ participant, riskResult }) {
   const [checked, setChecked] = useState([]);
   const [animKey, setAnimKey] = useState(0);
+  const [llmItems, setLlmItems] = useState(null);
+  const [loadingItems, setLoadingItems] = useState(true);
+  const cache = useRef({});
 
-  const items = calculateWhatIfDeltas(riskResult);
+  useEffect(() => {
+    setChecked([]);
+    setLlmItems(null);
+    setLoadingItems(true);
+    const key = participant.id;
+    if (cache.current[key]) {
+      setLlmItems(cache.current[key]);
+      setLoadingItems(false);
+      return;
+    }
+    generateInterventionRanking(participant, riskResult).then(result => {
+      if (result?.length) {
+        cache.current[key] = result;
+        setLlmItems(result);
+      }
+      setLoadingItems(false);
+    });
+  }, [participant.id]);
+
+  const items = llmItems || calculateWhatIfDeltas(riskResult);
+  const isAiRanked = !!llmItems;
   const base = riskResult.completionProbability;
   const totalDelta = checked.reduce((sum, idx) => sum + (items[idx]?.delta || 0), 0);
   const projected = Math.min(base + totalDelta, 99);
@@ -31,14 +56,25 @@ export default function WhatIfSimulator({ participant, riskResult }) {
           display: "flex", alignItems: "center", justifyContent: "center",
           fontSize: "1.1rem"
         }}>🔮</div>
-        <div>
-          <h3 style={{ fontSize: "0.925rem", fontFamily: "'DM Serif Display', serif", lineHeight: 1.2 }}>
-            What-If Simulator
-          </h3>
+        <div style={{ flex: 1 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <h3 style={{ fontSize: "0.925rem", fontFamily: "'DM Serif Display', serif", lineHeight: 1.2 }}>
+              What-If Simulator
+            </h3>
+            {isAiRanked && (
+              <span style={{
+                fontSize: "0.6rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em",
+                color: "var(--brand-secondary)", background: "rgba(44,95,46,0.1)",
+                border: "1px solid rgba(44,95,46,0.2)", borderRadius: "50px",
+                padding: "0.1rem 0.45rem"
+              }}>AI ranked</span>
+            )}
+          </div>
           <p style={{ fontSize: "0.68rem", color: "var(--text-muted)" }}>
-            Projected impact of interventions
+            {loadingItems ? "Ranking interventions for this participant…" : "Projected impact of interventions"}
           </p>
         </div>
+        {loadingItems && <LoadingSpinner size={16} />}
       </div>
 
       {/* Participant strip */}
@@ -115,6 +151,11 @@ export default function WhatIfSimulator({ participant, riskResult }) {
                 <div style={{ fontSize: "0.82rem", fontWeight: 500 }}>
                   {item.icon} {item.label}
                 </div>
+                {item.reasoning && (
+                  <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", lineHeight: 1.45, marginTop: "0.15rem" }}>
+                    {item.reasoning}
+                  </div>
+                )}
                 {/* Mini bar */}
                 <div style={{ height: 3, background: "var(--border)", borderRadius: 2, marginTop: "0.3rem", overflow: "hidden" }}>
                   <div style={{

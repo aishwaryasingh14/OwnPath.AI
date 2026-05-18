@@ -1,7 +1,20 @@
+import { useState } from "react";
 import { DEMO_PARTICIPANTS } from "../../data/participants";
 import { calculateRiskScore } from "../../lib/riskEngine";
+import { generateCohortNarration } from "../../lib/groqClient";
+import LoadingSpinner from "../common/LoadingSpinner";
 
 export default function CohortInsights({ weather }) {
+  const [narration, setNarration] = useState(null);
+  const [loadingNarration, setLoadingNarration] = useState(false);
+
+  const handleGenerateNarration = async () => {
+    setLoadingNarration(true);
+    const result = await generateCohortNarration(DEMO_PARTICIPANTS, weather);
+    setNarration(result);
+    setLoadingNarration(false);
+  };
+
   const riskResults = DEMO_PARTICIPANTS.map(p => calculateRiskScore(p, weather?.temp || 85));
   const transportIssues = DEMO_PARTICIPANTS.filter(p => p.reportedBarriers?.includes("transportation")).length;
   const childcareIssues = DEMO_PARTICIPANTS.filter(p => p.reportedBarriers?.includes("childcare")).length;
@@ -181,20 +194,86 @@ export default function CohortInsights({ weather }) {
           </div>
         )}
 
+        {/* AI cohort narration */}
         <div style={{
           padding: "0.875rem",
-          background: "rgba(212,80,10,0.04)",
-          border: "1px solid rgba(212,80,10,0.14)",
+          background: narration ? "rgba(44,95,46,0.04)" : "rgba(212,80,10,0.04)",
+          border: `1px solid ${narration ? "rgba(44,95,46,0.18)" : "rgba(212,80,10,0.14)"}`,
           borderRadius: "var(--radius-sm)"
         }}>
-          <div style={{ fontWeight: 600, fontSize: "0.875rem", marginBottom: "0.45rem", color: "var(--brand-primary)" }}>
-            Suggested 10-Minute Staff Huddle
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: narration ? "0.75rem" : 0 }}>
+            <div style={{ fontWeight: 600, fontSize: "0.875rem", color: narration ? "var(--brand-secondary)" : "var(--brand-primary)" }}>
+              🤖 AI Weekly Analysis
+            </div>
+            {!narration && (
+              <button
+                onClick={handleGenerateNarration}
+                disabled={loadingNarration}
+                style={{
+                  display: "flex", alignItems: "center", gap: "0.4rem",
+                  padding: "0.35rem 0.875rem", borderRadius: "50px",
+                  border: "1px solid var(--brand-primary)",
+                  background: "transparent", color: "var(--brand-primary)",
+                  fontSize: "0.75rem", fontWeight: 600, cursor: loadingNarration ? "default" : "pointer",
+                  transition: "all 0.18s ease"
+                }}
+              >
+                {loadingNarration ? <><LoadingSpinner size={13} /> Analyzing…</> : "Generate"}
+              </button>
+            )}
           </div>
-          <ol style={{ paddingLeft: "1rem", color: "var(--text-secondary)", fontSize: "0.8rem", lineHeight: 1.6 }}>
-            <li>Open with a group reminder about Sun Tran Day Passes.</li>
-            <li>Check Rosa's transportation resource preference before outreach.</li>
-            <li>Review no-contact choices so support stays opt-in.</li>
-          </ol>
+
+          {!narration && !loadingNarration && (
+            <p style={{ fontSize: "0.78rem", color: "var(--text-muted)", lineHeight: 1.5 }}>
+              Generate an AI-powered analysis of tonight's check-in data — patterns, priorities, and a suggested staff action for this week.
+            </p>
+          )}
+
+          {narration && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", animation: "fadeInUp 0.3s ease both" }}>
+              <p style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--text-primary)", lineHeight: 1.5 }}>
+                {narration.headline}
+              </p>
+              {narration.insights?.map((insight, i) => (
+                <div key={i} style={{
+                  padding: "0.6rem 0.75rem",
+                  background: "rgba(255,255,255,0.6)", borderRadius: "var(--radius-sm)",
+                  border: "1px solid var(--border)"
+                }}>
+                  <div style={{ fontSize: "0.78rem", fontWeight: 600, color: "var(--text-primary)", marginBottom: "0.2rem" }}>
+                    📍 {insight.signal}
+                  </div>
+                  <div style={{ fontSize: "0.75rem", color: "var(--brand-primary)", fontWeight: 500 }}>
+                    → {insight.action}
+                  </div>
+                </div>
+              ))}
+              {narration.priorityThisWeek && (
+                <div style={{
+                  padding: "0.6rem 0.75rem", borderRadius: "var(--radius-sm)",
+                  background: "rgba(212,80,10,0.07)", borderLeft: "3px solid var(--brand-primary)"
+                }}>
+                  <div style={{ fontSize: "0.68rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--brand-primary)", marginBottom: "0.2rem" }}>
+                    Top priority this week
+                  </div>
+                  <div style={{ fontSize: "0.78rem", color: "var(--text-primary)", lineHeight: 1.5 }}>
+                    {narration.priorityThisWeek}
+                  </div>
+                </div>
+              )}
+              {narration.positiveNote && (
+                <div style={{ fontSize: "0.75rem", color: "var(--brand-secondary)", lineHeight: 1.5 }}>
+                  ✨ {narration.positiveNote}
+                </div>
+              )}
+              <button
+                onClick={() => setNarration(null)}
+                style={{ alignSelf: "flex-start", background: "none", border: "none", fontSize: "0.7rem", color: "var(--text-muted)", cursor: "pointer", padding: 0, textDecoration: "underline" }}
+              >
+                Refresh analysis
+              </button>
+            </div>
+          )}
         </div>
 
         <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", lineHeight: 1.55 }}>

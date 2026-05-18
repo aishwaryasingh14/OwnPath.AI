@@ -171,7 +171,7 @@ export default function CheckinFlow() {
       {/* Content */}
       <main style={{ flex: 1, padding: "1.75rem 1.25rem 2.5rem", maxWidth: 480, width: "100%", margin: "0 auto" }}>
         {step === 0 && <FeelingScreen participant={participant} lang={lang} onNext={handleFeeling} />}
-        {step === 1 && <BarrierScreen lang={lang} onNext={handleBarriers} />}
+        {step === 1 && <BarrierScreen participant={participant} lang={lang} onNext={handleBarriers} />}
         {step === 2 && <SupportScreen lang={lang} onNext={handleSupport} />}
         {step === 3 && (
           <ConfirmScreen
