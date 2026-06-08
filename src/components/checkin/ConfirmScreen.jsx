@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import LoadingSpinner from "../common/LoadingSpinner";
-import { SUPPORT_RESOURCES, BARRIER_RESOURCE_MAP } from "../../data/resources";
 import { generateParticipantMessage, matchResourcesAI } from "../../lib/groqClient";
 import { t, COMMON } from "../../lib/i18n";
 
@@ -100,14 +99,6 @@ export default function ConfirmScreen({ participant, barriers, supportPreference
     });
   }, [lang]);
 
-  const relevantResources = barriers
-    .filter(b => b !== "skip" && b !== "other" && BARRIER_RESOURCE_MAP[b])
-    .flatMap(b => SUPPORT_RESOURCES[BARRIER_RESOURCE_MAP[b]] || [])
-    .filter((r, idx, arr) => arr.findIndex(x => x.name === r.name) === idx)
-    .slice(0, 3);
-
-  const showResources = supportPreference === "resources" && relevantResources.length > 0;
-
   const msgText = lang === "fr" ? message?.french : lang === "es" ? message?.spanish : message?.english;
   const sharedLabels = barriers
     .filter(Boolean)
@@ -173,8 +164,8 @@ export default function ConfirmScreen({ participant, barriers, supportPreference
         </div>
       )}
 
-      {/* AI-matched resources (prefer over static when available) */}
-      {aiResources && supportPreference === "resources" && (
+      {/* AI-matched resources — loading skeleton while fetching, results when ready */}
+      {supportPreference === "resources" && barriers.some(b => b !== "skip" && b !== "other") && (
         <div style={{ textAlign: "left", marginBottom: "1.5rem" }}>
           <div style={{
             fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase",
@@ -184,54 +175,44 @@ export default function ConfirmScreen({ participant, barriers, supportPreference
             <span style={{ color: "var(--brand-primary)" }}>✦</span>
             {AI_RESOURCES_LABEL[lang] || AI_RESOURCES_LABEL.en}
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-            {aiResources.map((r, i) => (
-              <div key={i} style={{
-                background: "var(--bg-card)", border: "1px solid var(--border)",
-                borderRadius: "var(--radius-sm)", padding: "0.875rem 1rem",
-                borderLeft: `3px solid ${URGENCY_COLOR[r.urgency] || "var(--brand-primary)"}`,
-                boxShadow: "var(--shadow)"
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.2rem" }}>
-                  <div style={{ fontWeight: 700, fontSize: "0.875rem" }}>{r.name}</div>
-                  {r.urgency === "high" && (
-                    <span style={{ fontSize: "0.62rem", fontWeight: 700, color: URGENCY_COLOR.high, background: `${URGENCY_COLOR.high}15`, padding: "0.1rem 0.4rem", borderRadius: "50px" }}>urgent</span>
-                  )}
+          {!aiResources ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              {[1, 2].map(i => (
+                <div key={i} style={{
+                  background: "var(--bg-card)", border: "1px solid var(--border)",
+                  borderRadius: "var(--radius-sm)", padding: "0.875rem 1rem",
+                  borderLeft: "3px solid var(--border)", boxShadow: "var(--shadow)",
+                  display: "flex", alignItems: "center", gap: "0.5rem",
+                  color: "var(--text-muted)", fontSize: "0.82rem"
+                }}>
+                  <LoadingSpinner size={14} />
+                  <span style={{ opacity: 0.6 }}>{lang === "es" ? "Buscando recursos…" : lang === "fr" ? "Recherche de ressources…" : "Finding resources…"}</span>
                 </div>
-                <div style={{ fontSize: "0.78rem", color: "var(--text-secondary)", marginBottom: "0.3rem", lineHeight: 1.45 }}>{r.reason}</div>
-                {r.contact && <div style={{ fontSize: "0.82rem", color: "var(--brand-primary)", fontWeight: 700 }}>{r.contact}</div>}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Static resources fallback when no AI resources yet */}
-      {!aiResources && showResources && (
-        <div style={{ textAlign: "left", marginBottom: "1.5rem" }}>
-          <div style={{
-            fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase",
-            letterSpacing: "0.08em", color: "var(--text-muted)", marginBottom: "0.6rem"
-          }}>
-            {t(lang, COMMON.resources)}
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-            {relevantResources.map((r, i) => (
-              <div key={i} style={{
-                background: "var(--bg-card)", border: "1px solid var(--border)",
-                borderRadius: "var(--radius-sm)", padding: "0.875rem 1rem",
-                borderLeft: "3px solid var(--brand-primary)", boxShadow: "var(--shadow)"
-              }}>
-                <div style={{ fontWeight: 700, fontSize: "0.875rem", marginBottom: "0.2rem" }}>{r.name}</div>
-                <div style={{ fontSize: "0.78rem", color: "var(--text-secondary)", marginBottom: "0.3rem" }}>{r.detail}</div>
-                <div style={{ fontSize: "0.82rem", color: "var(--brand-primary)", fontWeight: 700 }}>
-                  {r.contact}
-                  {r.cost && <span style={{ color: "var(--risk-low)", marginLeft: "0.5rem" }}>· {r.cost}</span>}
+              ))}
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", animation: "fadeInUp 0.25s ease both" }}>
+              {aiResources.map((r, i) => (
+                <div key={i} style={{
+                  background: "var(--bg-card)", border: "1px solid var(--border)",
+                  borderRadius: "var(--radius-sm)", padding: "0.875rem 1rem",
+                  borderLeft: `3px solid ${URGENCY_COLOR[r.urgency] || "var(--brand-primary)"}`,
+                  boxShadow: "var(--shadow)"
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.2rem" }}>
+                    <div style={{ fontWeight: 700, fontSize: "0.875rem" }}>{r.name}</div>
+                    {r.urgency === "high" && (
+                      <span style={{ fontSize: "0.62rem", fontWeight: 700, color: URGENCY_COLOR.high, background: `${URGENCY_COLOR.high}15`, padding: "0.1rem 0.4rem", borderRadius: "50px" }}>
+                        {lang === "es" ? "urgente" : lang === "fr" ? "urgent" : "urgent"}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: "0.78rem", color: "var(--text-secondary)", marginBottom: "0.3rem", lineHeight: 1.45 }}>{r.reason}</div>
+                  {r.contact && <div style={{ fontSize: "0.82rem", color: "var(--brand-primary)", fontWeight: 700 }}>{r.contact}</div>}
                 </div>
-                {r.note && <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "0.2rem", fontStyle: "italic" }}>{r.note}</div>}
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
