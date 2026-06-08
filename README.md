@@ -2,7 +2,7 @@
 
 Participant support and retention tool for Caridad Community Kitchen's free 10-week culinary training program.
 
-**Hack Arizona 2026 — Track 04: Southern Arizona Social Innovation**
+**Hack Arizona 2026: Track 04 - Southern Arizona Social Innovation**
 **🏆 Winner: Best Preservation of Individual Autonomy ($500)**
 
 > *"We don't predict people out of the program. We predict where support can keep them in it."*
@@ -11,7 +11,7 @@ Participant support and retention tool for Caridad Community Kitchen's free 10-w
 
 ## What it does
 
-OwnPath gives participants a friendly, SMS-style nightly check-in (no app, no login required) and gives staff a respectful support queue with AI-powered explanations — never a surveillance wall. The default is always **no contact**. All outreach requires manual staff approval.
+OwnPath gives participants a friendly, SMS-style nightly check-in (no app, no login required) and gives staff a respectful support queue with AI-powered explanations, never a surveillance wall. The default is always **no contact**. All outreach requires manual staff approval.
 
 Built as a prototype to show the Community Food Bank of Southern Arizona what a low-cost, dignity-first retention tool could look like for their culinary training program.
 
@@ -27,7 +27,7 @@ Built as a prototype to show the Community Food Bank of Southern Arizona what a 
 | `/checkin/P003` | Diana's check-in (medium risk — childcare) |
 | `/staff` | Staff dashboard (passcode: `caridad2026`) |
 
-> **Note on the check-in demo:** The `/checkin/P001` route currently shows Rosa's check-in flow to demonstrate what the platform looks like from a participant's perspective. In a real deployment, each participant would receive a unique SMS link every evening — clicking it opens exactly this page, personalized to them. No app download or login required.
+> **Note on the check-in demo:** The `/checkin/P001` route currently shows Rosa's check-in flow to demonstrate what the platform looks like from a participant's perspective. In a real deployment, each participant would receive a unique SMS link every evening and clicking it opens exactly this page, personalized to them. No app download or login required.
 
 ---
 
@@ -35,15 +35,15 @@ Built as a prototype to show the Community Food Bank of Southern Arizona what a 
 
 A 4-screen conversational flow accessible via a unique SMS link:
 
-1. **Feeling** — 5-point mood scale, time-aware greeting, auto-skips barriers if mood ≥ 4
-2. **Barriers** — multi-select (transportation, childcare, housing, overwhelmed, money, sick) + free-text that Groq LLM extracts into categories
-3. **Support preference** — resources only, reminder, staff contact, peer connection, or no contact (default)
-4. **Confirmation** — personalized LLM message, real Tucson local resources, data receipt showing exactly what was and wasn't shared
+1. **Feeling**: 5-point mood scale, time-aware greeting, auto-skips barriers if mood ≥ 4
+2. **Barriers**: multi-select (transportation, childcare, housing, overwhelmed, money, sick) + free-text that Groq LLM extracts into categories
+3. **Support preference**: resources only, reminder, staff contact, peer connection, or no contact (default)
+4. **Confirmation**: personalized LLM message, real Tucson local resources, data receipt showing exactly what was and wasn't shared
 
 **Languages:** English, Spanish, French
 
 **Participant autonomy controls:**
-- "Turn off check-ins" persists via localStorage — opt-out is honored on return visits
+- "Turn off check-ins" persists via localStorage, opt-out is honored on return visits
 - "Clear my data" resets the current session's check-in data and shows a confirmation toast
 - No contact is always the default support preference
 
@@ -55,15 +55,15 @@ Password-protected interface (`caridad2026`) with five tabs:
 
 ### Today's Queue
 - Participant cards sorted by risk level (HIGH / MEDIUM / LOW)
-- **Search by name** — filters the list in real time
-- **Barrier filter chips** — narrow to participants reporting a specific barrier (transport, childcare, housing, overwhelmed, money)
-- **Export CSV** — downloads a spreadsheet of all participants with risk levels, barriers, support preferences, and completion probabilities
+- **Search by name**: Filters the list in real time
+- **Barrier filter chips**: Narrow to participants reporting a specific barrier (transport, childcare, housing, overwhelmed, money)
+- **Export CSV**: Downloads a spreadsheet of all participants with risk levels, barriers, support preferences, and completion probabilities
 - Each card expands to show:
   - Mood history timeline (colored blocks across all check-ins)
   - All risk factors with explanations
   - AI-generated summary, suggested action, and draft message (Groq)
-  - Consent boundary enforced in UI — action buttons hidden if participant didn't allow that contact type
-  - **Staff notes** — private textarea that auto-saves to localStorage; a note indicator appears on the card
+  - Consent boundary enforced in UI, action buttons hidden if participant didn't allow that contact type
+  - **Staff notes**: private textarea that auto-saves to localStorage; a note indicator appears on the card
 
 ### Insights
 - Cohort barrier patterns, autonomy pulse, Week 3 watch, heat alerts
@@ -96,7 +96,7 @@ All LLM calls use **Groq (llama-3.3-70b-versatile)** via a Netlify serverless fu
 | Intervention ranking | Re-ranks What-If Simulator options for a specific participant |
 | Cohort narration | Weekly program-level analysis for staff insights tab |
 
-All functions have offline fallback templates — the demo works without a Groq API key.
+All functions have offline fallback templates, the demo works without a Groq API key.
 
 ---
 
@@ -129,7 +129,7 @@ Score → risk level (low / medium / high) → **completion probability %**
 - **Weather:** National Weather Service API (free, no key)
 - **Storage:** localStorage (no backend — demo-only)
 - **Fonts:** DM Serif Display, DM Sans, JetBrains Mono
-- **Deployed:** Netlify — `ownpath-caridad.netlify.app`
+- **Deployed:** Netlify: `https://ownpathai.netlify.app`
 
 ---
 
@@ -153,11 +153,11 @@ Without the key, all AI features fall back to pre-written templates automaticall
 
 ## Design principles
 
-- **No login, no app** — participants access via unique token in an SMS link
-- **Default is no contact** — participants opt in, not out
-- **Consent enforced in UI** — action buttons are hidden if participant didn't allow that contact type
-- **Nothing sends automatically** — all outreach is manual and requires staff approval
-- **Transparent AI** — model card visible in-app, risk factors shown as plain text, no black boxes
+- **No login, no app**: Participants access via unique token in an SMS link
+- **Default is no contact**: Participants opt in, not out
+- **Consent enforced in UI**: Action buttons are hidden if participant didn't allow that contact type
+- **Nothing sends automatically**: All outreach is manual and requires staff approval
+- **Transparent AI**: Model card visible in-app, risk factors shown as plain text, no black boxes
 
 ---
 
