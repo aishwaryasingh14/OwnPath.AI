@@ -8,8 +8,7 @@ import FeelingScreen from "./FeelingScreen";
 import BarrierScreen from "./BarrierScreen";
 import SupportScreen from "./SupportScreen";
 import ConfirmScreen from "./ConfirmScreen";
-
-const STEPS = ["How are you?", "What's hard?", "What would help?", "All set"];
+import { t, COMMON } from "../../lib/i18n";
 
 export default function CheckinFlow() {
   const { participantToken } = useParams();
@@ -31,21 +30,20 @@ export default function CheckinFlow() {
   if (!participant) {
     return (
       <div style={{
-        minHeight: "100vh",
-        background: "var(--bg-warm)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "1.5rem"
+        minHeight: "100vh", background: "var(--bg-warm)",
+        display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem"
       }}>
+        <div style={{ textAlign: "center", marginBottom: "0.75rem" }}>
+          <LanguageToggle lang={lang} setLang={setLang} />
+        </div>
         <div className="card" style={{ maxWidth: 420, textAlign: "center" }}>
           <div style={{ fontSize: "2rem", marginBottom: "0.75rem" }}>🔒</div>
-          <h1 style={{ fontSize: "1.35rem", marginBottom: "0.5rem" }}>This check-in link is not active</h1>
+          <h1 style={{ fontSize: "1.35rem", marginBottom: "0.5rem" }}>{t(lang, COMMON.invalidLink)}</h1>
           <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", lineHeight: 1.6 }}>
-            Please use the link sent by Caridad Community Kitchen or ask staff for a new one.
+            {t(lang, COMMON.invalidLinkDesc)}
           </p>
           <Link to="/" className="btn-primary" style={{ marginTop: "1rem", display: "inline-flex", textDecoration: "none" }}>
-            Back to OwnPath
+            {t(lang, COMMON.backToOwnPath)}
           </Link>
         </div>
       </div>
@@ -55,21 +53,18 @@ export default function CheckinFlow() {
   if (checkinsOff) {
     return (
       <div style={{
-        minHeight: "100vh",
-        background: "var(--bg-warm)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "1.5rem"
+        minHeight: "100vh", background: "var(--bg-warm)",
+        display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem"
       }}>
         <div className="card" style={{ maxWidth: 420, textAlign: "center" }}>
           <div style={{ fontSize: "2rem", marginBottom: "0.75rem" }}>✓</div>
-          <h1 style={{ fontSize: "1.35rem", marginBottom: "0.5rem" }}>Check-ins turned off</h1>
+          <h1 style={{ fontSize: "1.35rem", marginBottom: "0.5rem" }}>{t(lang, COMMON.checkinsOffHeading)}</h1>
           <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", lineHeight: 1.6 }}>
-            Thanks, {participant.firstName}. We will stop sending nightly check-ins. You can ask staff to turn them back on any time.
+            {lang === "es" ? `Gracias, ${participant.firstName}.` : lang === "fr" ? `Merci, ${participant.firstName}.` : `Thanks, ${participant.firstName}.`}
+            {" "}{t(lang, COMMON.checkinsOffDesc)}
           </p>
           <Link to="/" className="btn-primary" style={{ marginTop: "1rem", display: "inline-flex", textDecoration: "none" }}>
-            Back to OwnPath
+            {t(lang, COMMON.backToOwnPath)}
           </Link>
         </div>
       </div>
@@ -96,6 +91,7 @@ export default function CheckinFlow() {
     setStep(0);
   };
 
+  const STEPS = COMMON.stepLabels[lang] || COMMON.stepLabels.en;
   const skipBarriers = feelingRating >= 4;
   const visibleSteps = skipBarriers ? [STEPS[0], STEPS[2], STEPS[3]] : STEPS;
   const stepIndex    = skipBarriers && step === 2 ? 1 : skipBarriers && step === 3 ? 2 : step;
@@ -106,15 +102,9 @@ export default function CheckinFlow() {
 
       {/* Header */}
       <header style={{
-        background: "var(--bg-card)",
-        borderBottom: "1px solid var(--border)",
-        padding: "0.875rem 1.25rem",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        position: "sticky",
-        top: 0,
-        zIndex: 20
+        background: "var(--bg-card)", borderBottom: "1px solid var(--border)",
+        padding: "0.875rem 1.25rem", display: "flex", alignItems: "center",
+        justifyContent: "space-between", position: "sticky", top: 0, zIndex: 20
       }}>
         <Link to="/" style={{ display: "flex", alignItems: "center", gap: "0.55rem", textDecoration: "none" }}>
           <div style={{
@@ -136,28 +126,18 @@ export default function CheckinFlow() {
         <div>
           <div style={{ height: 3, background: "var(--border)" }}>
             <div style={{
-              height: "100%",
-              width: `${progress}%`,
+              height: "100%", width: `${progress}%`,
               background: "linear-gradient(90deg, var(--brand-primary), #f07030)",
-              borderRadius: "0 2px 2px 0",
-              transition: "width 0.45s ease"
+              borderRadius: "0 2px 2px 0", transition: "width 0.45s ease"
             }} />
           </div>
-          {/* Step labels */}
-          <div style={{
-            display: "flex",
-            justifyContent: "space-between",
-            padding: "0.5rem 1.25rem 0",
-            gap: "0.25rem"
-          }}>
+          <div style={{ display: "flex", justifyContent: "space-between", padding: "0.5rem 1.25rem 0", gap: "0.25rem" }}>
             {visibleSteps.map((s, i) => (
               <span key={i} style={{
                 fontSize: "0.65rem",
                 color: i === stepIndex ? "var(--brand-primary)" : "var(--text-muted)",
                 fontWeight: i === stepIndex ? 700 : 400,
-                transition: "color 0.3s ease",
-                textAlign: "center",
-                flex: 1
+                transition: "color 0.3s ease", textAlign: "center", flex: 1
               }}>{s}</span>
             ))}
           </div>
@@ -167,19 +147,12 @@ export default function CheckinFlow() {
       {/* Weather alert */}
       {weather?.isDangerous && step === 0 && (
         <div style={{
-          background: "rgba(192,57,43,0.07)",
-          borderBottom: "1px solid rgba(192,57,43,0.18)",
-          padding: "0.55rem 1.25rem",
-          fontSize: "0.78rem",
-          color: "var(--risk-high)",
+          background: "rgba(192,57,43,0.07)", borderBottom: "1px solid rgba(192,57,43,0.18)",
+          padding: "0.55rem 1.25rem", fontSize: "0.78rem", color: "var(--risk-high)",
           display: "flex", alignItems: "center", gap: "0.4rem"
         }}>
           <span>🌡️</span>
-          <span>
-            {lang === "es" ? `Mañana: ${weather.temp}°F — planifica tu viaje con tiempo.`
-            : lang === "fr" ? `Demain : ${weather.temp}°F — planifiez votre trajet à l'avance.`
-            : `Tomorrow's forecast: ${weather.temp}°F — plan your ride early and stay hydrated.`}
-          </span>
+          <span>{COMMON.weatherAlert[lang]?.(weather.temp) || COMMON.weatherAlert.en(weather.temp)}</span>
         </div>
       )}
 
@@ -188,16 +161,17 @@ export default function CheckinFlow() {
         {step === 0 && <FeelingScreen participant={participant} lang={lang} onNext={handleFeeling} />}
         {step === 1 && <BarrierScreen participant={participant} lang={lang} onNext={handleBarriers} />}
         {step === 2 && <SupportScreen lang={lang} onNext={handleSupport} />}
+
         {dataCleared && (
           <div style={{
             position: "fixed", top: "1rem", left: "50%", transform: "translateX(-50%)",
             background: "var(--brand-secondary)", color: "#fff",
             padding: "0.6rem 1.25rem", borderRadius: "50px",
             fontSize: "0.82rem", fontWeight: 600, zIndex: 50,
-            boxShadow: "0 4px 16px rgba(0,0,0,0.2)",
-            animation: "fadeInUp 0.25s ease both"
+            boxShadow: "0 4px 16px rgba(0,0,0,0.2)", animation: "fadeInUp 0.25s ease both",
+            whiteSpace: "nowrap"
           }}>
-            ✓ Your check-in data has been cleared
+            {t(lang, COMMON.dataCleared)}
           </div>
         )}
 
@@ -216,11 +190,8 @@ export default function CheckinFlow() {
       </main>
 
       <footer style={{
-        padding: "0.75rem 1.25rem",
-        textAlign: "center",
-        fontSize: "0.7rem",
-        color: "var(--text-muted)",
-        borderTop: "1px solid var(--border)"
+        padding: "0.75rem 1.25rem", textAlign: "center",
+        fontSize: "0.7rem", color: "var(--text-muted)", borderTop: "1px solid var(--border)"
       }}>
         Caridad Community Kitchen · 845 N Main Ave, Tucson, AZ · (520) 882-5641
       </footer>

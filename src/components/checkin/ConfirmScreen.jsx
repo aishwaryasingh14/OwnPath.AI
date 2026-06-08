@@ -245,9 +245,9 @@ export default function ConfirmScreen({ participant, barriers, supportPreference
           onClick={onClearData}
           className="btn-ghost"
           style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}
-          title="Remove your check-in data from this session"
+          title={t(lang, COMMON.clearDataTooltip)}
         >
-          {lang === "es" ? "Borrar mis datos" : lang === "fr" ? "Effacer mes données" : "Clear my data"}
+          {t(lang, COMMON.clearData)}
         </button>
       </div>
     </div>

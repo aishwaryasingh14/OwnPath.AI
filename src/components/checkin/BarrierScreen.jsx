@@ -160,7 +160,7 @@ export default function BarrierScreen({ participant, lang, onNext }) {
           className="btn-primary"
           style={{ width: "100%", marginTop: "1.25rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}
         >
-          {extracting ? <><LoadingSpinner size={16} color="#fff" /> Listening...</> : t(lang, COMMON.continue)}
+          {extracting ? <><LoadingSpinner size={16} color="#fff" /> {t(lang, COMMON.listening)}</> : t(lang, COMMON.continue)}
         </button>
       )}
     </div>
