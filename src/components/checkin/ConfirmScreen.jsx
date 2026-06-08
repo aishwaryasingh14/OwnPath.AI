@@ -67,12 +67,12 @@ export default function ConfirmScreen({ participant, barriers, supportPreference
   const [loading, setLoading] = useState(true);
   const [visible, setVisible] = useState(false);
   const [aiResources, setAiResources] = useState(null);
+  const [aiResourcesLang, setAiResourcesLang] = useState(null);
 
+  // Message generation runs once — returns all 3 languages, picks at render time
   useEffect(() => {
     const weatherCtx = weather?.isDangerous ? `Extreme heat (${weather.temp}°F)`
       : weather?.isHot ? `Hot day (${weather.temp}°F)` : "normal";
-
-    const realBarriers = barriers.filter(b => b !== "skip" && b !== "other");
 
     generateParticipantMessage(
       { ...participant, supportPreference },
@@ -84,14 +84,21 @@ export default function ConfirmScreen({ participant, barriers, supportPreference
       setLoading(false);
       setTimeout(() => setVisible(true), 80);
     });
-
-    if (realBarriers.length > 0) {
-      const ctx = `Week ${participant.currentWeek || "?"} participant at Caridad Community Kitchen culinary training, Tucson AZ.`;
-      matchResourcesAI(realBarriers, ctx, lang).then(result => {
-        if (result?.resources?.length) setAiResources(result.resources);
-      });
-    }
   }, []);
+
+  // Resource matching re-runs whenever lang changes so resources stay in sync
+  useEffect(() => {
+    const realBarriers = barriers.filter(b => b !== "skip" && b !== "other");
+    if (realBarriers.length === 0) return;
+    setAiResources(null);
+    const ctx = `Week ${participant.currentWeek || "?"} participant at Caridad Community Kitchen culinary training, Tucson AZ.`;
+    matchResourcesAI(realBarriers, ctx, lang).then(result => {
+      if (result?.resources?.length) {
+        setAiResources(result.resources);
+        setAiResourcesLang(lang);
+      }
+    });
+  }, [lang]);
 
   const relevantResources = barriers
     .filter(b => b !== "skip" && b !== "other" && BARRIER_RESOURCE_MAP[b])
