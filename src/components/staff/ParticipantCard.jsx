@@ -25,11 +25,22 @@ const SUPPORT_BOUNDARIES = {
   none: "No direct outreach. Staff may observe patterns, but participant chose no contact."
 };
 
+const MOOD_COLORS = {
+  great:     "var(--risk-low)",
+  okay:      "var(--brand-accent)",
+  worried:   "var(--risk-medium)",
+  struggling:"var(--risk-high)"
+};
+
 export default function ParticipantCard({ participant, riskResult, onSelect, isSelected }) {
   const [aiData, setAiData] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [actionTaken, setActionTaken] = useState(null);
   const [dismissed, setDismissed] = useState(false);
+  const [note, setNote] = useState(
+    () => localStorage.getItem(`ownpath_note_${participant.id}`) || ""
+  );
+  const [noteSaved, setNoteSaved] = useState(false);
 
   if (dismissed) return null;
 
@@ -38,6 +49,13 @@ export default function ParticipantCard({ participant, riskResult, onSelect, isS
   const supportBoundary = SUPPORT_BOUNDARIES[participant.supportPreference] || SUPPORT_BOUNDARIES.none;
   const canContact = ["staff_contact", "peer", "reminder"].includes(participant.supportPreference);
   const canSendResources = participant.supportPreference === "resources" || participant.supportPreference === "staff_contact";
+
+  const saveNote = (val) => {
+    setNote(val);
+    localStorage.setItem(`ownpath_note_${participant.id}`, val);
+    setNoteSaved(true);
+    setTimeout(() => setNoteSaved(false), 1800);
+  };
 
   const loadAI = async () => {
     if (aiData || aiLoading) return;
@@ -53,6 +71,7 @@ export default function ParticipantCard({ participant, riskResult, onSelect, isS
   };
 
   const initials = participant.firstName[0] + (participant.lastName[0] || "");
+  const history = participant.checkinHistory || [];
 
   return (
     <div
@@ -65,7 +84,6 @@ export default function ParticipantCard({ participant, riskResult, onSelect, isS
         cursor: "pointer",
         transition: "all 0.22s ease",
         boxShadow: isSelected ? `0 4px 20px ${cfg.border}22` : "var(--shadow)",
-        transform: isSelected ? "none" : undefined
       }}
       className="hover-lift"
     >
@@ -102,13 +120,18 @@ export default function ParticipantCard({ participant, riskResult, onSelect, isS
               </span>
               <span style={{
                 fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase",
-                letterSpacing: "0.07em",
-                color: cfg.accent,
-                background: `${cfg.accent}15`,
-                padding: "0.15rem 0.5rem", borderRadius: "50px"
+                letterSpacing: "0.07em", color: cfg.accent,
+                background: `${cfg.accent}15`, padding: "0.15rem 0.5rem", borderRadius: "50px"
               }}>
                 {cfg.label}
               </span>
+              {note && (
+                <span style={{
+                  fontSize: "0.65rem", color: "var(--text-muted)",
+                  background: "var(--bg-warm)", border: "1px solid var(--border)",
+                  padding: "0.1rem 0.4rem", borderRadius: "50px"
+                }}>📝 note</span>
+              )}
             </div>
             <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "1px" }}>
               Week {participant.currentWeek} · Day {participant.currentDay}
@@ -123,11 +146,8 @@ export default function ParticipantCard({ participant, riskResult, onSelect, isS
           {/* Completion meter */}
           <div style={{ textAlign: "right", flexShrink: 0 }}>
             <div style={{
-              fontSize: "1.4rem",
-              fontFamily: "'DM Serif Display', serif",
-              fontWeight: 700,
-              color: cfg.accent,
-              lineHeight: 1
+              fontSize: "1.4rem", fontFamily: "'DM Serif Display', serif",
+              fontWeight: 700, color: cfg.accent, lineHeight: 1
             }}>
               <AnimatedNumber value={riskResult.completionProbability} />%
             </div>
@@ -138,24 +158,18 @@ export default function ParticipantCard({ participant, riskResult, onSelect, isS
         {/* Progress bar */}
         <div style={{ marginTop: "0.75rem", height: 5, background: "var(--border)", borderRadius: 3, overflow: "hidden" }}>
           <div style={{
-            height: "100%",
-            width: `${riskResult.completionProbability}%`,
-            background: riskResult.level === "low"
-              ? "var(--risk-low)"
-              : riskResult.level === "medium"
-              ? "linear-gradient(90deg, var(--risk-medium), #f5a623)"
+            height: "100%", width: `${riskResult.completionProbability}%`,
+            background: riskResult.level === "low" ? "var(--risk-low)"
+              : riskResult.level === "medium" ? "linear-gradient(90deg, var(--risk-medium), #f5a623)"
               : "linear-gradient(90deg, var(--risk-high), #e74c3c)",
-            borderRadius: 3,
-            transition: "width 1s ease"
+            borderRadius: 3, transition: "width 1s ease"
           }} />
         </div>
 
         {/* Top factor */}
         {riskResult.factors.length > 0 && (
           <div style={{
-            marginTop: "0.6rem",
-            fontSize: "0.78rem",
-            color: "var(--text-secondary)",
+            marginTop: "0.6rem", fontSize: "0.78rem", color: "var(--text-secondary)",
             display: "flex", alignItems: "flex-start", gap: "0.3rem"
           }}>
             <span style={{ color: cfg.accent, flexShrink: 0 }}>↳</span>
@@ -169,34 +183,33 @@ export default function ParticipantCard({ participant, riskResult, onSelect, isS
         )}
       </div>
 
-      {/* Expanded detail */}
+      {/* Expanded detail — animated in */}
       {isSelected && (
         <div
-          style={{ borderTop: "1px solid var(--border)", padding: "1rem 1.25rem", background: "rgba(255,255,255,0.6)" }}
+          style={{
+            borderTop: "1px solid var(--border)", padding: "1rem 1.25rem",
+            background: "rgba(255,255,255,0.6)",
+            animation: "fadeInUp 0.22s ease both"
+          }}
           onClick={e => e.stopPropagation()}
         >
           {/* Support preference pill */}
           <div style={{
             display: "inline-flex", alignItems: "center", gap: "0.4rem",
-            fontSize: "0.75rem", fontWeight: 600,
-            color: "var(--brand-secondary)",
-            background: "rgba(44,95,46,0.08)",
-            border: "1px solid rgba(44,95,46,0.2)",
-            padding: "0.3rem 0.8rem", borderRadius: "50px",
-            marginBottom: "1rem"
+            fontSize: "0.75rem", fontWeight: 600, color: "var(--brand-secondary)",
+            background: "rgba(44,95,46,0.08)", border: "1px solid rgba(44,95,46,0.2)",
+            padding: "0.3rem 0.8rem", borderRadius: "50px", marginBottom: "1rem"
           }}>
             <span>{supportMeta.icon}</span>
             <span>{supportMeta.label}</span>
           </div>
+
+          {/* Consent boundary */}
           <div style={{
-            display: "flex",
-            gap: "0.6rem",
-            alignItems: "flex-start",
+            display: "flex", gap: "0.6rem", alignItems: "flex-start",
             padding: "0.75rem 0.875rem",
-            background: "rgba(44,95,46,0.06)",
-            border: "1px solid rgba(44,95,46,0.16)",
-            borderRadius: "var(--radius-sm)",
-            marginBottom: "1rem"
+            background: "rgba(44,95,46,0.06)", border: "1px solid rgba(44,95,46,0.16)",
+            borderRadius: "var(--radius-sm)", marginBottom: "1rem"
           }}>
             <span style={{ color: "var(--brand-secondary)", fontWeight: 800, lineHeight: 1 }}>✓</span>
             <div>
@@ -209,19 +222,46 @@ export default function ParticipantCard({ participant, riskResult, onSelect, isS
             </div>
           </div>
 
+          {/* Mood history */}
+          {history.length > 0 && (
+            <div style={{ marginBottom: "1rem" }}>
+              <div style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--text-muted)", marginBottom: "0.45rem" }}>
+                Mood history ({history.length} check-ins)
+              </div>
+              <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginBottom: "0.4rem" }}>
+                {history.map((h, i) => (
+                  <div key={i} title={h} style={{
+                    width: 16, height: 16, borderRadius: "4px",
+                    background: MOOD_COLORS[h] || "var(--border)", opacity: 0.85,
+                    flexShrink: 0
+                  }} />
+                ))}
+              </div>
+              <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+                {[
+                  { color: "var(--risk-low)",    label: "Great" },
+                  { color: "var(--brand-accent)", label: "Okay" },
+                  { color: "var(--risk-medium)",  label: "Worried" },
+                  { color: "var(--risk-high)",    label: "Struggling" }
+                ].map(l => (
+                  <div key={l.label} style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.68rem", color: "var(--text-muted)" }}>
+                    <div style={{ width: 10, height: 10, borderRadius: "2px", background: l.color }} />
+                    {l.label}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* All risk factors */}
           <div style={{ marginBottom: "1rem" }}>
-            <div style={{
-              fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase",
-              letterSpacing: "0.07em", color: "var(--text-muted)", marginBottom: "0.45rem"
-            }}>
+            <div style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--text-muted)", marginBottom: "0.45rem" }}>
               Why they're on your radar
             </div>
             {riskResult.factors.map((f, i) => (
               <div key={i} style={{
                 display: "flex", alignItems: "flex-start", gap: "0.4rem",
-                fontSize: "0.82rem", color: "var(--text-secondary)",
-                padding: "0.2rem 0"
+                fontSize: "0.82rem", color: "var(--text-secondary)", padding: "0.2rem 0"
               }}>
                 <span style={{ color: cfg.accent, flexShrink: 0, marginTop: "1px" }}>•</span>
                 <span>{f}</span>
@@ -233,22 +273,16 @@ export default function ParticipantCard({ participant, riskResult, onSelect, isS
           {aiLoading ? (
             <div style={{
               display: "flex", alignItems: "center", gap: "0.5rem",
-              color: "var(--text-muted)", fontSize: "0.82rem",
-              padding: "0.75rem",
-              background: "var(--bg-warm)",
-              borderRadius: "var(--radius-sm)",
-              marginBottom: "1rem"
+              color: "var(--text-muted)", fontSize: "0.82rem", padding: "0.75rem",
+              background: "var(--bg-warm)", borderRadius: "var(--radius-sm)", marginBottom: "1rem"
             }}>
               <LoadingSpinner size={16} />
               <span>Generating plain-English summary...</span>
             </div>
           ) : aiData ? (
             <div style={{
-              background: "rgba(212,80,10,0.04)",
-              border: "1px solid rgba(212,80,10,0.14)",
-              borderRadius: "var(--radius-sm)",
-              padding: "0.875rem 1rem",
-              marginBottom: "1rem"
+              background: "rgba(212,80,10,0.04)", border: "1px solid rgba(212,80,10,0.14)",
+              borderRadius: "var(--radius-sm)", padding: "0.875rem 1rem", marginBottom: "1rem"
             }}>
               <div style={{
                 fontSize: "0.65rem", fontWeight: 800, textTransform: "uppercase",
@@ -265,14 +299,10 @@ export default function ParticipantCard({ participant, riskResult, onSelect, isS
               </p>
               {aiData.messageDraft && (
                 <div style={{
-                  marginTop: "0.65rem",
-                  padding: "0.6rem 0.875rem",
-                  background: "rgba(255,255,255,0.8)",
-                  borderRadius: "var(--radius-sm)",
+                  marginTop: "0.65rem", padding: "0.6rem 0.875rem",
+                  background: "rgba(255,255,255,0.8)", borderRadius: "var(--radius-sm)",
                   borderLeft: "3px solid var(--brand-primary)",
-                  fontSize: "0.78rem",
-                  color: "var(--text-secondary)",
-                  fontStyle: "italic"
+                  fontSize: "0.78rem", color: "var(--text-secondary)", fontStyle: "italic"
                 }}>
                   Draft message: "{aiData.messageDraft}"
                 </div>
@@ -281,33 +311,24 @@ export default function ParticipantCard({ participant, riskResult, onSelect, isS
           ) : null}
 
           {/* Action buttons */}
-          <div style={{
-            fontSize: "0.68rem", color: "var(--text-muted)",
-            marginBottom: "0.5rem", fontWeight: 500
-          }}>
+          <div style={{ fontSize: "0.68rem", color: "var(--text-muted)", marginBottom: "0.5rem", fontWeight: 500 }}>
             All outreach requires your approval ↓
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.45rem" }}>
             {[
-              { id: "transit", label: "✉️ Send Sun Tran info",      show: participant.reportedBarriers?.includes("transportation") && canSendResources },
-              { id: "call",    label: "📞 Quick check-in call",     show: canContact },
-              { id: "makeup",  label: "🗓️ Offer make-up session",   show: participant.missedDays > 0 && participant.supportPreference !== "none" },
-              { id: "peer",    label: "💬 Connect with peer",       show: participant.supportPreference === "peer" || participant.supportPreference === "staff_contact" }
+              { id: "transit", label: "✉️ Send Sun Tran info",    show: participant.reportedBarriers?.includes("transportation") && canSendResources },
+              { id: "call",    label: "📞 Quick check-in call",   show: canContact },
+              { id: "makeup",  label: "🗓️ Offer make-up session", show: participant.missedDays > 0 && participant.supportPreference !== "none" },
+              { id: "peer",    label: "💬 Connect with peer",     show: participant.supportPreference === "peer" || participant.supportPreference === "staff_contact" }
             ].filter(a => a.show).slice(0, 4).map(action => (
               <button
                 key={action.id}
                 onClick={() => setActionTaken(prev => prev === action.id ? null : action.id)}
                 style={{
-                  padding: "0.6rem 0.75rem",
-                  borderRadius: "var(--radius-sm)",
-                  border: actionTaken === action.id
-                    ? "1.5px solid var(--brand-secondary)"
-                    : "1.5px solid var(--border)",
+                  padding: "0.6rem 0.75rem", borderRadius: "var(--radius-sm)",
+                  border: actionTaken === action.id ? "1.5px solid var(--brand-secondary)" : "1.5px solid var(--border)",
                   background: actionTaken === action.id ? "rgba(44,95,46,0.1)" : "var(--bg-warm)",
-                  fontSize: "0.775rem",
-                  fontWeight: 500,
-                  cursor: "pointer",
-                  transition: "all 0.18s ease",
+                  fontSize: "0.775rem", fontWeight: 500, cursor: "pointer", transition: "all 0.18s ease",
                   color: actionTaken === action.id ? "var(--brand-secondary)" : "var(--text-primary)"
                 }}
               >
@@ -317,19 +338,13 @@ export default function ParticipantCard({ participant, riskResult, onSelect, isS
           </div>
 
           <div style={{
-            marginTop: "0.75rem",
-            padding: "0.75rem 0.875rem",
-            borderRadius: "var(--radius-sm)",
+            marginTop: "0.75rem", padding: "0.75rem 0.875rem", borderRadius: "var(--radius-sm)",
             border: actionTaken ? "1px solid rgba(44,95,46,0.18)" : "1px dashed var(--border)",
             background: actionTaken ? "rgba(44,95,46,0.06)" : "rgba(255,255,255,0.55)"
           }}>
             <div style={{
-              fontSize: "0.68rem",
-              fontWeight: 800,
-              color: actionTaken ? "var(--brand-secondary)" : "var(--text-muted)",
-              textTransform: "uppercase",
-              letterSpacing: "0.07em",
-              marginBottom: "0.3rem"
+              fontSize: "0.68rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.07em",
+              color: actionTaken ? "var(--brand-secondary)" : "var(--text-muted)", marginBottom: "0.3rem"
             }}>
               Action receipt
             </div>
@@ -340,14 +355,38 @@ export default function ParticipantCard({ participant, riskResult, onSelect, isS
             </p>
           </div>
 
+          {/* Staff notes */}
+          <div style={{ marginTop: "0.875rem" }}>
+            <div style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--text-muted)", marginBottom: "0.4rem" }}>
+              Staff notes (private)
+            </div>
+            <textarea
+              rows={2}
+              placeholder={`Add a private note about ${participant.firstName}...`}
+              value={note}
+              onChange={e => saveNote(e.target.value)}
+              onClick={e => e.stopPropagation()}
+              style={{
+                width: "100%", padding: "0.6rem 0.75rem", resize: "vertical",
+                borderRadius: "var(--radius-sm)", border: "1.5px solid var(--border)",
+                fontSize: "0.82rem", background: "var(--bg-warm)", color: "var(--text-primary)",
+                outline: "none", lineHeight: 1.5, fontFamily: "inherit",
+                transition: "border-color 0.2s ease"
+              }}
+              onFocus={e => { e.target.style.borderColor = "var(--brand-primary)"; }}
+              onBlur={e => { e.target.style.borderColor = "var(--border)"; }}
+            />
+            {noteSaved && (
+              <div style={{ fontSize: "0.68rem", color: "var(--risk-low)", marginTop: "0.2rem" }}>✓ Note saved</div>
+            )}
+          </div>
+
           <button
             onClick={() => setDismissed(true)}
             style={{
-              marginTop: "0.5rem", width: "100%",
-              padding: "0.5rem", borderRadius: "var(--radius-sm)",
-              border: "1px dashed var(--border)",
-              background: "transparent",
-              fontSize: "0.78rem", color: "var(--text-muted)",
+              marginTop: "0.75rem", width: "100%", padding: "0.5rem",
+              borderRadius: "var(--radius-sm)", border: "1px dashed var(--border)",
+              background: "transparent", fontSize: "0.78rem", color: "var(--text-muted)",
               cursor: "pointer", transition: "all 0.18s ease"
             }}
             onMouseEnter={e => { e.currentTarget.style.background = "var(--bg-warm)"; }}

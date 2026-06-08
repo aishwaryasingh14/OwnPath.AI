@@ -19,7 +19,10 @@ export default function CheckinFlow() {
   const [barriers, setBarriers] = useState([]);
   const [supportPreference, setSupportPreference] = useState("none");
   const [weather, setWeather] = useState(null);
-  const [checkinsOff, setCheckinsOff] = useState(false);
+  const [checkinsOff, setCheckinsOff] = useState(
+    () => localStorage.getItem(`ownpath_optout_${participantToken}`) === "true"
+  );
+  const [dataCleared, setDataCleared] = useState(false);
 
   const participant = DEMO_PARTICIPANTS.find(p => p.id === participantToken);
 
@@ -80,6 +83,18 @@ export default function CheckinFlow() {
   const handleBarriers = (b) => { setBarriers(b); setStep(2); };
   const handleSupport  = (p) => { setSupportPreference(p); setStep(3); };
   const handleAdjust = () => setStep(2);
+  const handleTurnOff = () => {
+    localStorage.setItem(`ownpath_optout_${participantToken}`, "true");
+    setCheckinsOff(true);
+  };
+  const handleClearData = () => {
+    setFeelingRating(null);
+    setBarriers([]);
+    setSupportPreference("none");
+    setDataCleared(true);
+    setTimeout(() => setDataCleared(false), 3000);
+    setStep(0);
+  };
 
   const skipBarriers = feelingRating >= 4;
   const visibleSteps = skipBarriers ? [STEPS[0], STEPS[2], STEPS[3]] : STEPS;
@@ -173,6 +188,19 @@ export default function CheckinFlow() {
         {step === 0 && <FeelingScreen participant={participant} lang={lang} onNext={handleFeeling} />}
         {step === 1 && <BarrierScreen participant={participant} lang={lang} onNext={handleBarriers} />}
         {step === 2 && <SupportScreen lang={lang} onNext={handleSupport} />}
+        {dataCleared && (
+          <div style={{
+            position: "fixed", top: "1rem", left: "50%", transform: "translateX(-50%)",
+            background: "var(--brand-secondary)", color: "#fff",
+            padding: "0.6rem 1.25rem", borderRadius: "50px",
+            fontSize: "0.82rem", fontWeight: 600, zIndex: 50,
+            boxShadow: "0 4px 16px rgba(0,0,0,0.2)",
+            animation: "fadeInUp 0.25s ease both"
+          }}>
+            ✓ Your check-in data has been cleared
+          </div>
+        )}
+
         {step === 3 && (
           <ConfirmScreen
             participant={{ ...participant, feelingRating }}
@@ -181,7 +209,8 @@ export default function CheckinFlow() {
             weather={weather}
             lang={lang}
             onAdjust={handleAdjust}
-            onTurnOff={() => setCheckinsOff(true)}
+            onTurnOff={handleTurnOff}
+            onClearData={handleClearData}
           />
         )}
       </main>

@@ -40,9 +40,9 @@ h1, h2, h3, h4 {
   line-height: 1.2;
 }
 
-button { font-family: 'DM Sans', sans-serif; cursor: pointer; border: none; background: none; }
-a { color: inherit; text-decoration: none; }
-input, textarea { font-family: 'DM Sans', sans-serif; }
+button { font-family: 'DM Sans', sans-serif; cursor: pointer; border: none; background: none; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+a { color: inherit; text-decoration: none; -webkit-tap-highlight-color: transparent; }
+input, textarea { font-family: 'DM Sans', sans-serif; font-size: 1rem; }
 .mono { font-family: 'JetBrains Mono', monospace; }
 
 ::-webkit-scrollbar { width: 5px; }
@@ -160,3 +160,15 @@ input, textarea { font-family: 'DM Sans', sans-serif; }
 .stagger-3 { animation-delay: 160ms; }
 .stagger-4 { animation-delay: 240ms; }
 .stagger-5 { animation-delay: 320ms; }
+
+/* ─── Mobile / check-in optimizations ────────────────────── */
+@media (max-width: 480px) {
+  .card { padding: 1.1rem; }
+  .btn-primary { min-height: 52px; font-size: 1rem; }
+  .btn-ghost { min-height: 44px; }
+}
+
+/* Prevent iOS zoom on focus while keeping visual font size smaller */
+@media (max-width: 768px) {
+  input, textarea, select { font-size: 16px !important; }
+}

@@ -59,7 +59,7 @@ const RECEIPT_COPY = {
   }
 };
 
-export default function ConfirmScreen({ participant, barriers, supportPreference, weather, lang, onAdjust, onTurnOff }) {
+export default function ConfirmScreen({ participant, barriers, supportPreference, weather, lang, onAdjust, onTurnOff, onClearData }) {
   const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [visible, setVisible] = useState(false);
@@ -238,9 +238,17 @@ export default function ConfirmScreen({ participant, barriers, supportPreference
         </p>
       </div>
 
-      <div style={{ display: "flex", gap: "0.6rem", justifyContent: "center" }}>
+      <div style={{ display: "flex", gap: "0.6rem", justifyContent: "center", flexWrap: "wrap" }}>
         <button onClick={onAdjust} className="btn-ghost" style={{ fontSize: "0.78rem" }}>{t(lang, COMMON.adjust)}</button>
         <button onClick={onTurnOff} className="btn-ghost" style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>{t(lang, COMMON.turnOff)}</button>
+        <button
+          onClick={onClearData}
+          className="btn-ghost"
+          style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}
+          title="Remove your check-in data from this session"
+        >
+          {lang === "es" ? "Borrar mis datos" : lang === "fr" ? "Effacer mes données" : "Clear my data"}
+        </button>
       </div>
     </div>
   );
