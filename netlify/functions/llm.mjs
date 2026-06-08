@@ -215,7 +215,9 @@ Respond ONLY with valid JSON:
   };
 }
 
-async function handleResourceMatching({ barriers, participantContext }) {
+async function handleResourceMatching({ barriers, participantContext, lang }) {
+  const langName = lang === "es" ? "Spanish" : lang === "fr" ? "French" : "English";
+
   const TUCSON_RESOURCES = `
 - Sun Tran Route 8 (stops near Caridad on Main Ave) — transportation
 - Sun Tran Day Pass ($4, available at many Tucson locations) — transportation
@@ -231,9 +233,11 @@ Context: ${participantContext || "Tucson, AZ culinary training program participa
 From these real Tucson resources, pick the 2-3 most relevant for their specific situation:
 ${TUCSON_RESOURCES}
 
+IMPORTANT: Write the "name" and "reason" fields in ${langName}. Keep phone numbers and contact info in the original format.
+
 Respond ONLY with valid JSON:
 {"resources": [
-  {"name": "...", "contact": "...", "reason": "1 sentence why this fits their specific situation", "urgency": "high|medium|low"},
+  {"name": "...", "contact": "...", "reason": "1 sentence in ${langName} explaining why this fits their specific situation", "urgency": "high|medium|low"},
   ...
 ]}`;
 

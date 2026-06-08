@@ -156,9 +156,9 @@ export async function extractFullCheckin(text, participantName, lang = "en") {
   }
 }
 
-export async function matchResourcesAI(barriers, participantContext) {
+export async function matchResourcesAI(barriers, participantContext, lang = "en") {
   try {
-    return await callLlmFunction({ type: "match_resources", barriers, participantContext });
+    return await callLlmFunction({ type: "match_resources", barriers, participantContext, lang });
   } catch {
     return null;
   }

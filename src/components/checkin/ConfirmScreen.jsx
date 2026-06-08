@@ -87,7 +87,7 @@ export default function ConfirmScreen({ participant, barriers, supportPreference
 
     if (realBarriers.length > 0) {
       const ctx = `Week ${participant.currentWeek || "?"} participant at Caridad Community Kitchen culinary training, Tucson AZ.`;
-      matchResourcesAI(realBarriers, ctx).then(result => {
+      matchResourcesAI(realBarriers, ctx, lang).then(result => {
         if (result?.resources?.length) setAiResources(result.resources);
       });
     }
