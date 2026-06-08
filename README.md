@@ -22,9 +22,9 @@ Built as a prototype to show the Community Food Bank of Southern Arizona what a 
 | Route | Description |
 |---|---|
 | `/` | Landing page |
-| `/checkin/P001` | Rosa's check-in (active risk — transportation) |
-| `/checkin/P002` | Marcus's check-in (high risk — housing + overwhelmed) |
-| `/checkin/P003` | Diana's check-in (medium risk — childcare) |
+| `/checkin/P001` | Rosa's check-in (active risk: transportation) |
+| `/checkin/P002` | Marcus's check-in (high risk: housing + overwhelmed) |
+| `/checkin/P003` | Diana's check-in (medium risk: childcare) |
 | `/staff` | Staff dashboard (passcode: `caridad2026`) |
 
 > **Note on the check-in demo:** The `/checkin/P001` route currently shows Rosa's check-in flow to demonstrate what the platform looks like from a participant's perspective. In a real deployment, each participant would receive a unique SMS link every evening and clicking it opens exactly this page, personalized to them. No app download or login required.
