@@ -148,6 +148,30 @@ export async function generateInterventionRanking(participant, riskResult) {
   }
 }
 
+export async function extractFullCheckin(text, participantName, lang = "en") {
+  try {
+    return await callLlmFunction({ type: "full_checkin", text, participantName, lang });
+  } catch {
+    return { feelingRating: 3, barriers: [], supportPreference: "none", summary: text };
+  }
+}
+
+export async function matchResourcesAI(barriers, participantContext) {
+  try {
+    return await callLlmFunction({ type: "match_resources", barriers, participantContext });
+  } catch {
+    return null;
+  }
+}
+
+export async function detectCohortAnomalies(participants, riskResults, weather) {
+  try {
+    return await callLlmFunction({ type: "detect_anomalies", participants, riskResults, weather });
+  } catch {
+    return null;
+  }
+}
+
 export async function generateParticipantMessage(participant, selectedBarriers, _weatherContext, lang = "en") {
   try {
     const data = await callLlmFunction({ type: "participant", participant, selectedBarriers });

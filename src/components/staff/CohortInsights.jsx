@@ -1,30 +1,45 @@
 import { useState } from "react";
 import { DEMO_PARTICIPANTS } from "../../data/participants";
 import { calculateRiskScore } from "../../lib/riskEngine";
-import { generateCohortNarration } from "../../lib/groqClient";
+import { generateCohortNarration, detectCohortAnomalies } from "../../lib/groqClient";
 import LoadingSpinner from "../common/LoadingSpinner";
 
-export default function CohortInsights({ weather }) {
+const SEVERITY_COLOR = { high: "var(--risk-high)", medium: "var(--risk-medium)", low: "var(--brand-secondary)" };
+const TYPE_ICON = { spike: "📈", cluster: "👥", systemic: "⚙️", missed: "🔍" };
+
+export default function CohortInsights({ weather, allParticipants }) {
   const [narration, setNarration] = useState(null);
   const [loadingNarration, setLoadingNarration] = useState(false);
+  const [anomalies, setAnomalies] = useState(null);
+  const [loadingAnomalies, setLoadingAnomalies] = useState(false);
+
+  const participants = allParticipants || DEMO_PARTICIPANTS;
 
   const handleGenerateNarration = async () => {
     setLoadingNarration(true);
-    const result = await generateCohortNarration(DEMO_PARTICIPANTS, weather);
+    const result = await generateCohortNarration(participants, weather);
     setNarration(result);
     setLoadingNarration(false);
   };
 
-  const riskResults = DEMO_PARTICIPANTS.map(p => calculateRiskScore(p, weather?.temp || 85));
-  const transportIssues = DEMO_PARTICIPANTS.filter(p => p.reportedBarriers?.includes("transportation")).length;
-  const childcareIssues = DEMO_PARTICIPANTS.filter(p => p.reportedBarriers?.includes("childcare")).length;
-  const housingIssues = DEMO_PARTICIPANTS.filter(p => p.reportedBarriers?.includes("housing")).length;
-  const week3Count = DEMO_PARTICIPANTS.filter(p => p.currentWeek === 3).length;
-  const recoveryExamples = DEMO_PARTICIPANTS.filter(p => p.recoveryNote);
-  const optedIntoSupport = DEMO_PARTICIPANTS.filter(p =>
+  const handleDetectAnomalies = async () => {
+    setLoadingAnomalies(true);
+    const riskResults = participants.map(p => calculateRiskScore(p, weather?.temp || 85));
+    const result = await detectCohortAnomalies(participants, riskResults, weather);
+    setAnomalies(result);
+    setLoadingAnomalies(false);
+  };
+
+  const riskResults = participants.map(p => calculateRiskScore(p, weather?.temp || 85));
+  const transportIssues = participants.filter(p => p.reportedBarriers?.includes("transportation")).length;
+  const childcareIssues = participants.filter(p => p.reportedBarriers?.includes("childcare")).length;
+  const housingIssues = participants.filter(p => p.reportedBarriers?.includes("housing")).length;
+  const week3Count = participants.filter(p => p.currentWeek === 3).length;
+  const recoveryExamples = participants.filter(p => p.recoveryNote);
+  const optedIntoSupport = participants.filter(p =>
     ["resources", "reminder", "staff_contact", "peer"].includes(p.supportPreference)
   ).length;
-  const noContact = DEMO_PARTICIPANTS.filter(p => p.supportPreference === "none").length;
+  const noContact = participants.filter(p => p.supportPreference === "none").length;
   const highOrMedium = riskResults.filter(r => r.level !== "low").length;
 
   const patternRows = [
@@ -80,7 +95,7 @@ export default function CohortInsights({ weather }) {
               {highOrMedium}
             </div>
             <p style={{ fontSize: "0.78rem", color: "var(--text-secondary)", lineHeight: 1.45, marginTop: "0.3rem" }}>
-              may benefit from support out of {DEMO_PARTICIPANTS.length}; the rest stay out of the queue.
+              may benefit from support out of {participants.length}; the rest stay out of the queue.
             </p>
           </div>
         </div>
@@ -271,6 +286,81 @@ export default function CohortInsights({ weather }) {
                 style={{ alignSelf: "flex-start", background: "none", border: "none", fontSize: "0.7rem", color: "var(--text-muted)", cursor: "pointer", padding: 0, textDecoration: "underline" }}
               >
                 Refresh analysis
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Anomaly detection */}
+        <div style={{
+          padding: "0.875rem",
+          background: anomalies ? "rgba(192,57,43,0.04)" : "rgba(212,80,10,0.04)",
+          border: `1px solid ${anomalies ? "rgba(192,57,43,0.18)" : "rgba(212,80,10,0.14)"}`,
+          borderRadius: "var(--radius-sm)"
+        }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: anomalies ? "0.75rem" : 0 }}>
+            <div style={{ fontWeight: 600, fontSize: "0.875rem", color: anomalies ? "var(--risk-high)" : "var(--brand-primary)" }}>
+              🔍 AI Anomaly Detection
+            </div>
+            {!anomalies && (
+              <button
+                onClick={handleDetectAnomalies}
+                disabled={loadingAnomalies}
+                style={{
+                  display: "flex", alignItems: "center", gap: "0.4rem",
+                  padding: "0.35rem 0.875rem", borderRadius: "50px",
+                  border: "1px solid var(--brand-primary)",
+                  background: "transparent", color: "var(--brand-primary)",
+                  fontSize: "0.75rem", fontWeight: 600, cursor: loadingAnomalies ? "default" : "pointer",
+                  transition: "all 0.18s ease"
+                }}
+              >
+                {loadingAnomalies ? <><LoadingSpinner size={13} /> Scanning…</> : "Detect"}
+              </button>
+            )}
+          </div>
+
+          {!anomalies && !loadingAnomalies && (
+            <p style={{ fontSize: "0.78rem", color: "var(--text-muted)", lineHeight: 1.5 }}>
+              Scan the cohort for non-obvious patterns: barrier spikes, at-risk clusters, or participants who may be missed by standard risk scoring.
+            </p>
+          )}
+
+          {anomalies && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.55rem", animation: "fadeInUp 0.3s ease both" }}>
+              {anomalies.summary && (
+                <p style={{ fontSize: "0.82rem", fontWeight: 600, color: "var(--text-primary)", lineHeight: 1.5 }}>
+                  {anomalies.summary}
+                </p>
+              )}
+              {anomalies.anomalies?.length === 0 && (
+                <p style={{ fontSize: "0.78rem", color: "var(--brand-secondary)" }}>✓ No unusual patterns detected tonight.</p>
+              )}
+              {anomalies.anomalies?.map((a, i) => (
+                <div key={i} style={{
+                  padding: "0.75rem 0.875rem",
+                  background: "rgba(255,255,255,0.7)", borderRadius: "var(--radius-sm)",
+                  border: `1px solid var(--border)`,
+                  borderLeft: `3px solid ${SEVERITY_COLOR[a.severity] || "var(--brand-primary)"}`
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", marginBottom: "0.3rem" }}>
+                    <span>{TYPE_ICON[a.type] || "•"}</span>
+                    <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--text-primary)" }}>{a.title}</span>
+                    <span style={{
+                      fontSize: "0.62rem", fontWeight: 700, padding: "0.1rem 0.4rem", borderRadius: "50px",
+                      color: SEVERITY_COLOR[a.severity] || "var(--text-muted)",
+                      background: `${SEVERITY_COLOR[a.severity] || "var(--border)"}18`
+                    }}>{a.severity}</span>
+                  </div>
+                  <p style={{ fontSize: "0.78rem", color: "var(--text-secondary)", lineHeight: 1.5, marginBottom: "0.3rem" }}>{a.description}</p>
+                  <p style={{ fontSize: "0.75rem", color: "var(--brand-primary)", fontWeight: 500 }}>→ {a.action}</p>
+                </div>
+              ))}
+              <button
+                onClick={() => setAnomalies(null)}
+                style={{ alignSelf: "flex-start", background: "none", border: "none", fontSize: "0.7rem", color: "var(--text-muted)", cursor: "pointer", padding: 0, textDecoration: "underline" }}
+              >
+                Re-scan
               </button>
             </div>
           )}

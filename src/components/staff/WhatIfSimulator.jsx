@@ -4,12 +4,17 @@ import { generateInterventionRanking } from "../../lib/groqClient";
 import AnimatedNumber from "../common/AnimatedNumber";
 import LoadingSpinner from "../common/LoadingSpinner";
 
+const getTrackedOutcomeCount = () => {
+  try { return Object.keys(JSON.parse(localStorage.getItem("ownpath_outcomes")) || {}).length; } catch { return 0; }
+};
+
 export default function WhatIfSimulator({ participant, riskResult }) {
   const [checked, setChecked] = useState([]);
   const [animKey, setAnimKey] = useState(0);
   const [llmItems, setLlmItems] = useState(null);
   const [loadingItems, setLoadingItems] = useState(true);
   const cache = useRef({});
+  const trackedOutcomes = getTrackedOutcomeCount();
 
   useEffect(() => {
     setChecked([]);
@@ -71,7 +76,11 @@ export default function WhatIfSimulator({ participant, riskResult }) {
             )}
           </div>
           <p style={{ fontSize: "0.68rem", color: "var(--text-muted)" }}>
-            {loadingItems ? "Ranking interventions for this participant…" : "Projected impact of interventions"}
+            {loadingItems ? "Ranking interventions for this participant…" : (
+              trackedOutcomes >= 3
+                ? `Estimates informed by ${trackedOutcomes} tracked cohort outcomes`
+                : "Projected impact of interventions"
+            )}
           </p>
         </div>
         {loadingItems && <LoadingSpinner size={16} />}

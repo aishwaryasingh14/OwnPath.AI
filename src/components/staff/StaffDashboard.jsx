@@ -369,6 +369,7 @@ export default function StaffDashboard() {
                           riskResult={riskResults[idx]}
                           onSelect={(id) => setSelected(id)}
                           isSelected={selected === p.id}
+                          allParticipants={allParticipants}
                         />
                       );
                     })
@@ -400,7 +401,7 @@ export default function StaffDashboard() {
         {/* ── Insights tab ── */}
         {tab === "insights" && (
           <div style={{ maxWidth: 780 }}>
-            <CohortInsights weather={weather} />
+            <CohortInsights weather={weather} allParticipants={allParticipants} />
 
             <div className="card" style={{ marginTop: "1.25rem" }}>
               <h3 style={{ fontSize: "1.05rem", marginBottom: "1rem", fontFamily: "'DM Serif Display', serif" }}>

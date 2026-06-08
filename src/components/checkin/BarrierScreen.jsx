@@ -21,12 +21,37 @@ const FREETEXT_LABEL = { en: "Or describe it in your own words", es: "O descríb
 const FREETEXT_PH    = { en: "What's going on for you right now?", es: "¿Qué está pasando contigo ahora?", fr: "Qu'est-ce qui se passe pour vous en ce moment ?" };
 const EXTRACTED_LABEL = { en: "We heard:", es: "Entendimos:", fr: "Nous avons compris :" };
 
+const SPEECH_LANG = { en: "en-US", es: "es-US", fr: "fr-FR" };
+const MIC_LABEL = { en: "🎙 Speak", es: "🎙 Hablar", fr: "🎙 Parler" };
+const LISTENING_LABEL = { en: "Listening…", es: "Escuchando…", fr: "Écoute…" };
+
 export default function BarrierScreen({ participant, lang, onNext }) {
   const [selected, setSelected] = useState([]);
   const [otherText, setOtherText] = useState("");
   const [freeText, setFreeText] = useState("");
   const [extracting, setExtracting] = useState(false);
   const [extracted, setExtracted] = useState(null);
+  const [isListening, setIsListening] = useState(false);
+
+  const speechSupported = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+
+  const startVoice = () => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return;
+    const recognition = new SR();
+    recognition.lang = SPEECH_LANG[lang] || "en-US";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    setIsListening(true);
+    recognition.start();
+    recognition.onresult = (e) => {
+      const transcript = e.results[0][0].transcript;
+      setFreeText(prev => prev ? `${prev} ${transcript}` : transcript);
+      setIsListening(false);
+    };
+    recognition.onerror = () => setIsListening(false);
+    recognition.onend = () => setIsListening(false);
+  };
 
   const toggle = (id) => {
     if (id === "skip") { onNext(["skip"]); return; }
@@ -115,24 +140,43 @@ export default function BarrierScreen({ participant, lang, onNext }) {
       {/* Free-text natural language option */}
       {selected.length === 0 && (
         <div style={{ marginTop: "0.75rem" }}>
-          <div style={{ fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--text-muted)", marginBottom: "0.4rem" }}>
-            {t(lang, FREETEXT_LABEL)}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.4rem" }}>
+            <div style={{ fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--text-muted)" }}>
+              {t(lang, FREETEXT_LABEL)}
+            </div>
+            {speechSupported && (
+              <button
+                onClick={startVoice}
+                disabled={isListening}
+                style={{
+                  fontSize: "0.72rem", fontWeight: 600, padding: "0.2rem 0.65rem",
+                  borderRadius: "50px", border: `1.5px solid ${isListening ? "var(--brand-primary)" : "var(--border)"}`,
+                  background: isListening ? "rgba(212,80,10,0.1)" : "transparent",
+                  color: isListening ? "var(--brand-primary)" : "var(--text-muted)",
+                  cursor: isListening ? "default" : "pointer", transition: "all 0.18s ease"
+                }}
+              >
+                {isListening ? LISTENING_LABEL[lang] || LISTENING_LABEL.en : MIC_LABEL[lang] || MIC_LABEL.en}
+              </button>
+            )}
           </div>
           <textarea
             rows={3}
             placeholder={t(lang, FREETEXT_PH)}
             value={freeText}
             onChange={e => setFreeText(e.target.value)}
+            disabled={isListening}
             style={{
               width: "100%", padding: "0.75rem 1rem", resize: "none",
-              borderRadius: "var(--radius-sm)", border: "1.5px solid var(--border)",
+              borderRadius: "var(--radius-sm)",
+              border: `1.5px solid ${isListening ? "var(--brand-primary)" : "var(--border)"}`,
               fontSize: "0.9rem", background: "var(--bg-card)", color: "var(--text-primary)",
               outline: "none", lineHeight: 1.55, fontFamily: "inherit",
               transition: "border-color 0.2s ease",
               boxSizing: "border-box"
             }}
-            onFocus={e => { e.target.style.borderColor = "var(--brand-primary)"; }}
-            onBlur={e => { e.target.style.borderColor = "var(--border)"; }}
+            onFocus={e => { if (!isListening) e.target.style.borderColor = "var(--brand-primary)"; }}
+            onBlur={e => { if (!isListening) e.target.style.borderColor = "var(--border)"; }}
           />
         </div>
       )}

@@ -8,6 +8,7 @@ import FeelingScreen from "./FeelingScreen";
 import BarrierScreen from "./BarrierScreen";
 import SupportScreen from "./SupportScreen";
 import ConfirmScreen from "./ConfirmScreen";
+import QuickCheckinScreen from "./QuickCheckinScreen";
 import { t, COMMON } from "../../lib/i18n";
 
 export default function CheckinFlow() {
@@ -22,6 +23,7 @@ export default function CheckinFlow() {
     () => localStorage.getItem(`ownpath_optout_${participantToken}`) === "true"
   );
   const [dataCleared, setDataCleared] = useState(false);
+  const [quickMode, setQuickMode] = useState(false);
 
   const participant = DEMO_PARTICIPANTS.find(p => p.id === participantToken);
 
@@ -89,6 +91,14 @@ export default function CheckinFlow() {
     setDataCleared(true);
     setTimeout(() => setDataCleared(false), 3000);
     setStep(0);
+    setQuickMode(false);
+  };
+
+  const handleQuickComplete = ({ feelingRating: r, barriers: b, supportPreference: s }) => {
+    setFeelingRating(r);
+    setBarriers(b);
+    setSupportPreference(s || "none");
+    setStep(3);
   };
 
   const STEPS = COMMON.stepLabels[lang] || COMMON.stepLabels.en;
@@ -158,9 +168,29 @@ export default function CheckinFlow() {
 
       {/* Content */}
       <main style={{ flex: 1, padding: "1.75rem 1.25rem 2.5rem", maxWidth: 480, width: "100%", margin: "0 auto" }}>
-        {step === 0 && <FeelingScreen participant={participant} lang={lang} onNext={handleFeeling} />}
-        {step === 1 && <BarrierScreen participant={participant} lang={lang} onNext={handleBarriers} />}
-        {step === 2 && <SupportScreen lang={lang} onNext={handleSupport} />}
+        {/* Quick mode toggle — only show on step 0 */}
+        {step === 0 && !quickMode && (
+          <div style={{ textAlign: "right", marginBottom: "0.75rem" }}>
+            <button
+              onClick={() => setQuickMode(true)}
+              style={{
+                fontSize: "0.75rem", color: "var(--brand-primary)", background: "none",
+                border: "1px solid rgba(212,80,10,0.3)", borderRadius: "50px",
+                padding: "0.3rem 0.75rem", cursor: "pointer", fontWeight: 500,
+                transition: "all 0.18s ease"
+              }}
+            >
+              ⚡ {lang === "es" ? "Registro rápido" : lang === "fr" ? "Enregistrement rapide" : "Quick check-in"}
+            </button>
+          </div>
+        )}
+
+        {quickMode && step < 3 && (
+          <QuickCheckinScreen participant={participant} lang={lang} onComplete={handleQuickComplete} />
+        )}
+        {!quickMode && step === 0 && <FeelingScreen participant={participant} lang={lang} onNext={handleFeeling} />}
+        {!quickMode && step === 1 && <BarrierScreen participant={participant} lang={lang} onNext={handleBarriers} />}
+        {!quickMode && step === 2 && <SupportScreen lang={lang} onNext={handleSupport} />}
 
         {dataCleared && (
           <div style={{

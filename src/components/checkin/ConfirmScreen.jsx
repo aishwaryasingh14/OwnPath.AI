@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import LoadingSpinner from "../common/LoadingSpinner";
 import { SUPPORT_RESOURCES, BARRIER_RESOURCE_MAP } from "../../data/resources";
-import { generateParticipantMessage } from "../../lib/groqClient";
+import { generateParticipantMessage, matchResourcesAI } from "../../lib/groqClient";
 import { t, COMMON } from "../../lib/i18n";
+
+const URGENCY_COLOR = { high: "var(--risk-high)", medium: "var(--risk-medium)", low: "var(--brand-secondary)" };
+const AI_RESOURCES_LABEL = { en: "Resources matched for you", es: "Recursos seleccionados para ti", fr: "Ressources sélectionnées pour vous" };
 
 const SUPPORT_PREF_LABELS = {
   resources: {
@@ -63,10 +66,13 @@ export default function ConfirmScreen({ participant, barriers, supportPreference
   const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [visible, setVisible] = useState(false);
+  const [aiResources, setAiResources] = useState(null);
 
   useEffect(() => {
     const weatherCtx = weather?.isDangerous ? `Extreme heat (${weather.temp}°F)`
       : weather?.isHot ? `Hot day (${weather.temp}°F)` : "normal";
+
+    const realBarriers = barriers.filter(b => b !== "skip" && b !== "other");
 
     generateParticipantMessage(
       { ...participant, supportPreference },
@@ -78,6 +84,13 @@ export default function ConfirmScreen({ participant, barriers, supportPreference
       setLoading(false);
       setTimeout(() => setVisible(true), 80);
     });
+
+    if (realBarriers.length > 0) {
+      const ctx = `Week ${participant.currentWeek || "?"} participant at Caridad Community Kitchen culinary training, Tucson AZ.`;
+      matchResourcesAI(realBarriers, ctx).then(result => {
+        if (result?.resources?.length) setAiResources(result.resources);
+      });
+    }
   }, []);
 
   const relevantResources = barriers
@@ -153,7 +166,41 @@ export default function ConfirmScreen({ participant, barriers, supportPreference
         </div>
       )}
 
-      {showResources && (
+      {/* AI-matched resources (prefer over static when available) */}
+      {aiResources && supportPreference === "resources" && (
+        <div style={{ textAlign: "left", marginBottom: "1.5rem" }}>
+          <div style={{
+            fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase",
+            letterSpacing: "0.08em", color: "var(--text-muted)", marginBottom: "0.6rem",
+            display: "flex", alignItems: "center", gap: "0.4rem"
+          }}>
+            <span style={{ color: "var(--brand-primary)" }}>✦</span>
+            {AI_RESOURCES_LABEL[lang] || AI_RESOURCES_LABEL.en}
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            {aiResources.map((r, i) => (
+              <div key={i} style={{
+                background: "var(--bg-card)", border: "1px solid var(--border)",
+                borderRadius: "var(--radius-sm)", padding: "0.875rem 1rem",
+                borderLeft: `3px solid ${URGENCY_COLOR[r.urgency] || "var(--brand-primary)"}`,
+                boxShadow: "var(--shadow)"
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.2rem" }}>
+                  <div style={{ fontWeight: 700, fontSize: "0.875rem" }}>{r.name}</div>
+                  {r.urgency === "high" && (
+                    <span style={{ fontSize: "0.62rem", fontWeight: 700, color: URGENCY_COLOR.high, background: `${URGENCY_COLOR.high}15`, padding: "0.1rem 0.4rem", borderRadius: "50px" }}>urgent</span>
+                  )}
+                </div>
+                <div style={{ fontSize: "0.78rem", color: "var(--text-secondary)", marginBottom: "0.3rem", lineHeight: 1.45 }}>{r.reason}</div>
+                {r.contact && <div style={{ fontSize: "0.82rem", color: "var(--brand-primary)", fontWeight: 700 }}>{r.contact}</div>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Static resources fallback when no AI resources yet */}
+      {!aiResources && showResources && (
         <div style={{ textAlign: "left", marginBottom: "1.5rem" }}>
           <div style={{
             fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase",

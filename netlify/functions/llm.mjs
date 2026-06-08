@@ -185,6 +185,124 @@ Respond ONLY with valid JSON:
   return JSON.parse(response.choices[0].message.content);
 }
 
+async function handleFullCheckinExtraction({ text, participantName, lang }) {
+  const langName = lang === "es" ? "Spanish" : lang === "fr" ? "French" : "English";
+  const prompt = `A participant named ${participantName} sent this message during a nightly check-in (written in ${langName}): "${text}"
+
+Extract:
+1. feeling_rating: 1 (struggling) to 5 (great) — infer from tone/words
+2. barriers: array of matching ids from: transportation, housing, childcare, overwhelmed, money, sick
+3. support_preference: "none" | "resources" | "reminder" | "staff_contact" | "peer" — infer from what they're asking for, default to "none"
+4. summary: brief empathetic English paraphrase of their message (1 sentence)
+
+Respond ONLY with valid JSON:
+{"feeling_rating": number, "barriers": [], "support_preference": "none", "summary": "..."}`;
+
+  const response = await groq.chat.completions.create({
+    model: "llama-3.3-70b-versatile",
+    messages: [{ role: "user", content: prompt }],
+    temperature: 0.2,
+    max_tokens: 150,
+    response_format: { type: "json_object" },
+  });
+
+  const parsed = JSON.parse(response.choices[0].message.content);
+  return {
+    feelingRating: parsed.feeling_rating || 3,
+    barriers: parsed.barriers || [],
+    supportPreference: parsed.support_preference || "none",
+    summary: parsed.summary || text
+  };
+}
+
+async function handleResourceMatching({ barriers, participantContext }) {
+  const TUCSON_RESOURCES = `
+- Sun Tran Route 8 (stops near Caridad on Main Ave) — transportation
+- Sun Tran Day Pass ($4, available at many Tucson locations) — transportation
+- 211 Arizona (dial 2-1-1, 24/7, bilingual) — housing, childcare, general crisis
+- Primavera Foundation (520-882-5152) — emergency housing, Tucson
+- ADES Child Care Assistance Program (1-800-204-7633) — childcare
+- Crisis Text Line (text HOME to 741741) — mental health, overwhelmed
+- Caridad Staff (520-882-5641) — direct support from program`;
+
+  const prompt = `A workforce training participant has these challenges: ${barriers.join(", ")}.
+Context: ${participantContext || "Tucson, AZ culinary training program participant."}
+
+From these real Tucson resources, pick the 2-3 most relevant for their specific situation:
+${TUCSON_RESOURCES}
+
+Respond ONLY with valid JSON:
+{"resources": [
+  {"name": "...", "contact": "...", "reason": "1 sentence why this fits their specific situation", "urgency": "high|medium|low"},
+  ...
+]}`;
+
+  const response = await groq.chat.completions.create({
+    model: "llama-3.3-70b-versatile",
+    messages: [{ role: "user", content: prompt }],
+    temperature: 0.3,
+    max_tokens: 350,
+    response_format: { type: "json_object" },
+  });
+
+  return JSON.parse(response.choices[0].message.content);
+}
+
+async function handleAnomalyDetection({ participants, riskResults, weather }) {
+  const barrierCounts = {};
+  const weekGroups = {};
+  let noCheckinCount = 0;
+  let highRiskCount = 0;
+
+  participants.forEach((p, i) => {
+    if (!p.checkedInToday) noCheckinCount++;
+    if (riskResults[i]?.level === "high") highRiskCount++;
+    (p.reportedBarriers || []).forEach(b => {
+      barrierCounts[b] = (barrierCounts[b] || 0) + 1;
+    });
+    weekGroups[p.currentWeek] = weekGroups[p.currentWeek] || [];
+    weekGroups[p.currentWeek].push(p.firstName);
+  });
+
+  const barrierSummary = Object.entries(barrierCounts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([b, n]) => `${b}: ${n}`)
+    .join(", ") || "none";
+
+  const prompt = `Analyze this cohort data for a 10-week culinary training program and identify non-obvious patterns or anomalies that a staff member might miss.
+
+Cohort: ${participants.length} participants
+High risk: ${highRiskCount}
+No check-in tonight: ${noCheckinCount}
+Barrier frequency: ${barrierSummary}
+Week distribution: ${Object.entries(weekGroups).map(([w, ps]) => `Week ${w}: ${ps.length}`).join(", ")}
+Weather: ${weather ? `${weather.temp}°F tomorrow` : "unknown"}
+
+Look for:
+- Unusual spike in a barrier compared to what's normal for this program stage
+- Clusters of participants at the same week with similar issues
+- Combinations of signals that suggest a systemic issue (e.g., multiple transport issues could mean a bus route changed)
+- Participants who should be flagged but might be missed by simple risk scoring
+
+Respond ONLY with valid JSON:
+{"anomalies": [
+  {"type": "spike|cluster|systemic|missed", "title": "Short title (5 words max)", "description": "What the anomaly is and why it matters (2 sentences)", "action": "Recommended staff action (1 sentence)", "severity": "high|medium|low"},
+  ...
+], "summary": "Overall pattern in 1 sentence or null if nothing notable"}
+
+Return an empty anomalies array if nothing unusual is detected. Be specific — generic observations are not useful.`;
+
+  const response = await groq.chat.completions.create({
+    model: "llama-3.3-70b-versatile",
+    messages: [{ role: "user", content: prompt }],
+    temperature: 0.4,
+    max_tokens: 500,
+    response_format: { type: "json_object" },
+  });
+
+  return JSON.parse(response.choices[0].message.content);
+}
+
 export const handler = async (event) => {
   if (event.httpMethod !== "POST") {
     return { statusCode: 405, body: "Method Not Allowed" };
@@ -204,6 +322,12 @@ export const handler = async (event) => {
       result = await handleBarrierExtraction(data);
     } else if (type === "interventions") {
       result = await handleInterventionRanking(data);
+    } else if (type === "full_checkin") {
+      result = await handleFullCheckinExtraction(data);
+    } else if (type === "match_resources") {
+      result = await handleResourceMatching(data);
+    } else if (type === "detect_anomalies") {
+      result = await handleAnomalyDetection(data);
     } else {
       return { statusCode: 400, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ error: "Unknown type" }) };
     }

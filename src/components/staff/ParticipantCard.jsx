@@ -1,7 +1,25 @@
 import { useState } from "react";
 import { generateStaffExplanation } from "../../lib/groqClient";
+import { findPeerMatch, getPeerMatchReason } from "../../lib/peerMatching";
+import { DEMO_PARTICIPANTS } from "../../data/participants";
 import LoadingSpinner from "../common/LoadingSpinner";
 import AnimatedNumber from "../common/AnimatedNumber";
+
+const OUTCOMES_KEY = "ownpath_outcomes";
+const getOutcomes = () => { try { return JSON.parse(localStorage.getItem(OUTCOMES_KEY)) || {}; } catch { return {}; } };
+const saveOutcome = (id, status) => {
+  const outcomes = getOutcomes();
+  if (status === null) { delete outcomes[id]; }
+  else { outcomes[id] = { status, date: new Date().toISOString() }; }
+  localStorage.setItem(OUTCOMES_KEY, JSON.stringify(outcomes));
+};
+
+const TREND_CONFIG = {
+  declining:  { color: "var(--risk-high)",   icon: "↘", label: "Declining" },
+  struggling: { color: "var(--risk-medium)", icon: "→", label: "Struggling" },
+  stable:     { color: "var(--text-muted)",  icon: "→", label: "Stable" },
+  improving:  { color: "var(--risk-low)",    icon: "↗", label: "Improving" }
+};
 
 const LEVEL_CONFIG = {
   high:   { bg: "rgba(192,57,43,0.05)",  border: "#C0392B", accent: "var(--risk-high)",   label: "HIGH",   dots: 4 },
@@ -32,7 +50,7 @@ const MOOD_COLORS = {
   struggling:"var(--risk-high)"
 };
 
-export default function ParticipantCard({ participant, riskResult, onSelect, isSelected }) {
+export default function ParticipantCard({ participant, riskResult, onSelect, isSelected, allParticipants }) {
   const [aiData, setAiData] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [actionTaken, setActionTaken] = useState(null);
@@ -41,8 +59,20 @@ export default function ParticipantCard({ participant, riskResult, onSelect, isS
     () => localStorage.getItem(`ownpath_note_${participant.id}`) || ""
   );
   const [noteSaved, setNoteSaved] = useState(false);
+  const [outcome, setOutcome] = useState(() => getOutcomes()[participant.id] || null);
 
   if (dismissed) return null;
+
+  const participants = allParticipants || DEMO_PARTICIPANTS;
+  const peerMatch = (participant.supportPreference === "peer" || participant.supportPreference === "staff_contact")
+    ? findPeerMatch(participant, participants)
+    : null;
+  const peerReason = peerMatch ? getPeerMatchReason(participant, peerMatch) : null;
+
+  const handleOutcome = (status) => {
+    saveOutcome(participant.id, status);
+    setOutcome({ status, date: new Date().toISOString() });
+  };
 
   const cfg = LEVEL_CONFIG[riskResult.level];
   const supportMeta = SUPPORT_LABELS[participant.supportPreference] || SUPPORT_LABELS.none;
@@ -125,6 +155,25 @@ export default function ParticipantCard({ participant, riskResult, onSelect, isS
               }}>
                 {cfg.label}
               </span>
+              {riskResult.trajectory && riskResult.trajectory !== "stable" && (() => {
+                const tc = TREND_CONFIG[riskResult.trajectory];
+                return tc ? (
+                  <span title={`Mood trend: ${tc.label}`} style={{
+                    fontSize: "0.65rem", color: tc.color,
+                    background: `${tc.color}15`, border: `1px solid ${tc.color}40`,
+                    padding: "0.1rem 0.4rem", borderRadius: "50px", fontWeight: 600
+                  }}>{tc.icon} {tc.label}</span>
+                ) : null;
+              })()}
+              {outcome && (
+                <span style={{
+                  fontSize: "0.65rem", fontWeight: 700,
+                  color: outcome.status === "graduated" ? "var(--risk-low)" : "var(--text-muted)",
+                  background: outcome.status === "graduated" ? "rgba(44,95,46,0.1)" : "rgba(0,0,0,0.05)",
+                  border: `1px solid ${outcome.status === "graduated" ? "rgba(44,95,46,0.25)" : "var(--border)"}`,
+                  padding: "0.1rem 0.4rem", borderRadius: "50px"
+                }}>{outcome.status === "graduated" ? "🎓 Graduated" : "⚠ Dropped"}</span>
+              )}
               {note && (
                 <span style={{
                   fontSize: "0.65rem", color: "var(--text-muted)",
@@ -378,6 +427,64 @@ export default function ParticipantCard({ participant, riskResult, onSelect, isS
             />
             {noteSaved && (
               <div style={{ fontSize: "0.68rem", color: "var(--risk-low)", marginTop: "0.2rem" }}>✓ Note saved</div>
+            )}
+          </div>
+
+          {/* Peer match suggestion */}
+          {peerMatch && (
+            <div style={{
+              marginTop: "0.875rem", padding: "0.75rem 0.875rem",
+              background: "rgba(212,80,10,0.04)", border: "1px solid rgba(212,80,10,0.15)",
+              borderRadius: "var(--radius-sm)"
+            }}>
+              <div style={{ fontSize: "0.68rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--brand-primary)", marginBottom: "0.35rem" }}>
+                💬 Suggested peer match
+              </div>
+              <div style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--text-primary)", marginBottom: "0.2rem" }}>
+                {peerMatch.firstName} {peerMatch.lastName} · Week {peerMatch.currentWeek}
+              </div>
+              <div style={{ fontSize: "0.78rem", color: "var(--text-secondary)", lineHeight: 1.5 }}>
+                {peerReason}
+              </div>
+            </div>
+          )}
+
+          {/* Outcome tracking */}
+          <div style={{ marginTop: "0.875rem" }}>
+            <div style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--text-muted)", marginBottom: "0.45rem" }}>
+              Outcome tracking
+            </div>
+            {outcome ? (
+              <div style={{
+                padding: "0.6rem 0.875rem", borderRadius: "var(--radius-sm)",
+                background: outcome.status === "graduated" ? "rgba(44,95,46,0.08)" : "rgba(0,0,0,0.04)",
+                border: `1px solid ${outcome.status === "graduated" ? "rgba(44,95,46,0.22)" : "var(--border)"}`,
+                fontSize: "0.82rem", color: "var(--text-secondary)", display: "flex", alignItems: "center", justifyContent: "space-between"
+              }}>
+                <span>{outcome.status === "graduated" ? "🎓 Marked as graduated" : "⚠ Marked as dropped"}</span>
+                <button onClick={() => { saveOutcome(participant.id, null); setOutcome(null); }} style={{ fontSize: "0.72rem", color: "var(--text-muted)", background: "none", border: "none", cursor: "pointer", padding: "0" }}>undo</button>
+              </div>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.4rem" }}>
+                <button
+                  onClick={() => handleOutcome("graduated")}
+                  style={{
+                    padding: "0.55rem", borderRadius: "var(--radius-sm)",
+                    border: "1.5px solid rgba(44,95,46,0.3)", background: "rgba(44,95,46,0.06)",
+                    fontSize: "0.775rem", fontWeight: 600, color: "var(--brand-secondary)",
+                    cursor: "pointer", transition: "all 0.18s ease"
+                  }}
+                >🎓 Mark graduated</button>
+                <button
+                  onClick={() => handleOutcome("dropped")}
+                  style={{
+                    padding: "0.55rem", borderRadius: "var(--radius-sm)",
+                    border: "1.5px solid var(--border)", background: "var(--bg-warm)",
+                    fontSize: "0.775rem", fontWeight: 500, color: "var(--text-muted)",
+                    cursor: "pointer", transition: "all 0.18s ease"
+                  }}
+                >⚠ Mark dropped</button>
+              </div>
             )}
           </div>
 
