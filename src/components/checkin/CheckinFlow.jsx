@@ -101,6 +101,15 @@ export default function CheckinFlow() {
     setStep(3);
   };
 
+  const handleBack = () => {
+    if (quickMode) { setQuickMode(false); return; }
+    if (step === 3) { setStep(skipBarriers ? 2 : 2); return; }
+    if (step === 2) { setStep(skipBarriers ? 0 : 1); return; }
+    if (step === 1) { setStep(0); }
+  };
+
+  const BACK_LABEL = { en: "← Back", es: "← Atrás", fr: "← Retour" };
+
   const STEPS = COMMON.stepLabels[lang] || COMMON.stepLabels.en;
   const skipBarriers = feelingRating >= 4;
   const visibleSteps = skipBarriers ? [STEPS[0], STEPS[2], STEPS[3]] : STEPS;
@@ -151,6 +160,25 @@ export default function CheckinFlow() {
               }}>{s}</span>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Back button */}
+      {(step > 0 || quickMode) && step < 3 && (
+        <div style={{ padding: "0.5rem 1.25rem 0" }}>
+          <button
+            onClick={handleBack}
+            style={{
+              background: "none", border: "none", cursor: "pointer",
+              fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: 500,
+              padding: "0.25rem 0", display: "inline-flex", alignItems: "center",
+              transition: "color 0.18s ease"
+            }}
+            onMouseEnter={e => { e.currentTarget.style.color = "var(--text-primary)"; }}
+            onMouseLeave={e => { e.currentTarget.style.color = "var(--text-muted)"; }}
+          >
+            {BACK_LABEL[lang] || BACK_LABEL.en}
+          </button>
         </div>
       )}
 
