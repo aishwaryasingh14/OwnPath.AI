@@ -54,11 +54,11 @@ Password-protected (`caridad2026`) interface with five tabs:
 
     Opt-in rate, no-contact honored percentage, consent breakdown, Participant Bill of Rights, and data OwnPath refuses to collect.
 
-- **Model Card**
+- **Model Card**:
 
-    In-app AI transparency: what the model uses, what it never touches, limitations, and the human-in-loop commitment.
+    Show in-app AI transparency: what the model uses, what it never touches, limitations, and the human-in-loop commitment.
 
-- **Manage Cohort**
+- **Manage Cohort**:
 
     Add real participants (name, week, day, missed and late days, support preference, barriers). Custom participants persist in localStorage with full risk scoring and can be removed at any time.
 
