@@ -42,22 +42,22 @@ Each participant gets a unique link texted every evening. No app, no login, no a
 Password-protected (`caridad2026`) interface with five tabs:
 
 - **Today's Queue**:
-Participant cards ranked by risk level (HIGH / MEDIUM / LOW). Each card shows completion probability %, mood trend indicator (Declining / Improving), and the top risk factor. Expand any card to see: full mood history timeline, all risk factors, AI explanation and suggested action and draft message, consent boundary enforced in UI, peer match suggestion, outcome tracking (graduated / dropped), and private staff notes. Search by name, filter by barrier type, export to CSV.
+    Participant cards ranked by risk level (HIGH / MEDIUM / LOW). Each card shows completion probability %, mood trend indicator (Declining / Improving), and the top risk factor. Expand any card to see: full mood history timeline, all risk factors, AI explanation and suggested action and draft message, consent boundary enforced in UI, peer match suggestion, outcome tracking (graduated / dropped), and private staff notes. Search by name, filter by barrier type, export to CSV.
 
 - **Insights**:
-Cohort barrier patterns, autonomy pulse (how many participants chose no contact), Week 3 watch, and extreme heat alerts based on the National Weather Service forecast.
+    Cohort barrier patterns, autonomy pulse (how many participants chose no contact), Week 3 watch, and extreme heat alerts based on the National Weather Service forecast.
 
     - **AI Weekly Analysis** (generated on demand using tonight's check-in data): Groq reads the evening's full cohort snapshot and produces a headline insight, two or three specific data-grounded signals, and the single highest-leverage staff action for the current week. This is not auto-scheduled; staff trigger it when they want a fresh read.
     - **AI Anomaly Detection** (generated on demand): scans the cohort for non-obvious patterns that standard risk scoring may miss, including barrier spikes, clusters of participants at the same week with similar issues, systemic signals (such as multiple transport issues suggesting a bus route change), and participants whose individual scores look fine but whose combination of signals warrants attention.
 
-- **Autonomy Audit**
-Opt-in rate, no-contact honored percentage, consent breakdown, Participant Bill of Rights, and data OwnPath refuses to collect.
+- **Autonomy Audit**:
+    Opt-in rate, no-contact honored percentage, consent breakdown, Participant Bill of Rights, and data OwnPath refuses to collect.
 
 - **Model Card**
-In-app AI transparency: what the model uses, what it never touches, limitations, and the human-in-loop commitment.
+    In-app AI transparency: what the model uses, what it never touches, limitations, and the human-in-loop commitment.
 
 - **Manage Cohort**
-Add real participants (name, week, day, missed and late days, support preference, barriers). Custom participants persist in localStorage with full risk scoring and can be removed at any time.
+    Add real participants (name, week, day, missed and late days, support preference, barriers). Custom participants persist in localStorage with full risk scoring and can be removed at any time.
 
 ---
 
