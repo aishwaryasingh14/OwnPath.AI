@@ -19,7 +19,7 @@ Traditional retention tools either require app downloads (friction), collect exc
 
 ## How it works
 
-### Participant side — nightly SMS check-in
+### Participant side: Nightly SMS check-in
 
 Each participant gets a unique link texted every evening. No app, no login, no account. Clicking it opens a 4-screen conversational flow:
 
@@ -37,7 +37,7 @@ Each participant gets a unique link texted every evening. No app, no login, no a
 - Clear my data: resets the current session immediately
 - No contact is always the default; nothing sends without staff approval
 
-### Staff side — support queue dashboard
+### Staff side: Support queue dashboard
 
 Password-protected (`caridad2026`) interface with five tabs:
 
