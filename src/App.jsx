@@ -219,48 +219,6 @@ function HowItWorks() {
   );
 }
 
-function DailyFlow() {
-  const steps = [
-    { time: "6:00 PM",  icon: "phone",    label: "SMS link sent to each participant", note: "Unique link, no login required" },
-    { time: "7–9 PM",   icon: "users",    label: "Participants check in at their pace", note: "2–3 minutes, on any phone" },
-    { time: "9:00 PM",  icon: "chart",    label: "Support dashboard updates", note: "Support signals calculated automatically" },
-    { time: "9:15 PM",  icon: "calendar", label: "Staff reviews (~10 minutes)", note: "Approves any outreach actions" }
-  ];
-  return (
-    <section style={{ background: "var(--bg-card)", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", padding: "5rem 2rem" }}>
-      <div style={{ maxWidth: 680, margin: "0 auto" }}>
-        <p style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: "0.75rem" }}>How it works daily</p>
-        <h2 style={{ fontSize: "clamp(1.5rem, 3vw, 2rem)", letterSpacing: "-0.015em", marginBottom: "2rem" }}>
-          Fits into the program without adding work.
-        </h2>
-        <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
-          {steps.map((s, i) => (
-            <div key={i} style={{ display: "flex", gap: "1.25rem", position: "relative" }}>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                <div style={{
-                  width: 40, height: 40, borderRadius: "50%", flexShrink: 0,
-                  background: "rgba(212,80,10,0.08)", border: "1.5px solid rgba(212,80,10,0.2)",
-                  display: "flex", alignItems: "center", justifyContent: "center"
-                }}>
-                  <Icon name={s.icon} size={16} color="var(--brand-primary)" />
-                </div>
-                {i < steps.length - 1 && (
-                  <div style={{ width: 1.5, flex: 1, background: "var(--border)", margin: "4px 0" }} />
-                )}
-              </div>
-              <div style={{ paddingBottom: i < steps.length - 1 ? "1.5rem" : 0, paddingTop: "0.6rem" }}>
-                <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--brand-primary)", marginBottom: "0.15rem", fontFamily: "'JetBrains Mono', monospace" }}>{s.time}</div>
-                <div style={{ fontSize: "0.925rem", fontWeight: 600, marginBottom: "0.15rem" }}>{s.label}</div>
-                <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>{s.note}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function AutonomySection() {
   return (
     <section style={{ padding: "5rem 2rem", maxWidth: 900, margin: "0 auto" }}>
@@ -544,12 +502,11 @@ function Home() {
     <div>
       <Nav />
       <Hero />
+      <ProblemSection />
       <Stats />
       <HowItWorks />
-      <DailyFlow />
       <AutonomySection />
       <AISection />
-      <ProblemSection />
       <DemoCTA />
       <Footer />
     </div>
