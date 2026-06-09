@@ -15,7 +15,7 @@ export function findPeerMatch(participant, allParticipants) {
   if (recoveryMatches.length > 0) {
     recoveryMatches.sort((a, b) => {
       const aShared = participantBarriers.filter(b => searchText(a).includes(b)).length;
-      const bShared = participantBarriers.filter(b => searchText(b).includes(b)).length;
+      const bShared = participantBarriers.filter(barrier => searchText(b).includes(barrier)).length;
       return bShared - aShared ||
         Math.abs(a.currentWeek - participant.currentWeek) - Math.abs(b.currentWeek - participant.currentWeek);
     });
